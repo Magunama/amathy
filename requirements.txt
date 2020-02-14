@@ -1,0 +1,4 @@
+asyncio
+aiomysql
+discord.py[voice]
+psutil

@@ -12,17 +12,20 @@ def load_settings():
         return json.load(f)
 
 
-async def nasty_startup():
-    pass
+async def start_bot():
+    await bot.start(token, bot=True, reconnect=True)
 
 
 if __name__ == "__main__":
     setts = load_settings()
     token = setts["token"]
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(nasty_startup())
     try:
-        bot.run(token, bot=True, reconnect=True)
+        loop.run_until_complete(start_bot())
+    except KeyboardInterrupt:
+        loop.run_until_complete(bot.logout())
+        print("I'm going to sleep, master!")
+        # todo: cancel tasks
     except Exception as e:
         print(f"[ERROR] {e}")
     else:
