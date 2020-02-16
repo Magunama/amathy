@@ -1,7 +1,6 @@
 from discord.ext import commands
 import os
 from shutil import copyfile
-import json
 
 
 def check_folder(path):
@@ -39,7 +38,7 @@ def check_create_file(path, content):
 def is_creator():
     async def is_creator_check(ctx):
         uid = ctx.message.author.id
-        if uid in [306826558348460033, 254207115399397376, 544606487209705474]:
+        if uid in ctx.bot.owner_ids:
             return True
         else:
             await ctx.send("Creator only access!")

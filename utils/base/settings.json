@@ -1,3 +1,13 @@
 {
-  "token": "YourTokenHere"
+  "token": "YourTokenHere",
+  "db_ip": "127.0.0.1",
+  "db_user": "root",
+  "db_pass": "root",
+  "db_name": "amathy",
+  "owner_ids": [306826558348460033, 254207115399397376, 544606487209705474],
+  "constants": {
+    "utc_diff": 2,
+    "date_format": "%Y-%m-%d %H:%M:%S",
+    "mc_emoji_id": 677131708922855475
+  }
 }

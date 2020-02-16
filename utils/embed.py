@@ -33,6 +33,6 @@ class Embed:
             timestamp = datetime.datetime.utcnow()
         embed.timestamp = timestamp
         if not footer:
-            footer = ">>> Please donate to my master Amathy <<<"
+            footer = ">>> Please donate to keep me alive <<<"
         embed.set_footer(text=footer)
         return embed
