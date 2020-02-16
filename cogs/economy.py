@@ -2,6 +2,8 @@ from discord.ext import commands
 from utils.embed import Embed
 import datetime
 import random
+import asyncio
+import discord
 
 
 class Economy(commands.Cog):
@@ -104,6 +106,122 @@ class Economy(commands.Cog):
         embed = Embed().make_emb(title, desc, author, fields)
         embed.set_thumbnail(url=targ.avatar_url)
         await ctx.send(embed=embed)
+
+    @commands.guild_only()
+    @commands.command(aliases=["baga"])
+    async def deposit(self, ctx, val=None):
+        if not val:
+            text = "**You need to input a value.**"
+            return await ctx.send(text)
+        pocket_coins, bank_coins = await self.bot.funx.get_coins(ctx.author.id)
+        if val in ["all", "max"]:
+            val = pocket_coins
+        else:
+            if val.isdigit():
+                val = int(val)
+            else:
+                text = "**What kind of values are you trying to input? :anger:**"
+                return await ctx.send(text)
+        if val <= 0:
+            text = "**You can't do this.**"
+            return await ctx.send(text.format(self.mc_emoji))
+        if pocket_coins < val:
+            text = "**You don't have this much {} (MC).**"
+            return await ctx.send(text.format(self.mc_emoji))
+        pocket_coins -= val
+        bank_coins += val
+        await self.bot.funx.save_pocket(ctx.author.id, pocket_coins)
+        await self.bot.funx.save_bank(ctx.author.id, bank_coins)
+        text = ":money_with_wings: **| Transfer successful. :) You have deposited {} {} in the bank.**"
+        await ctx.send(text.format(val, self.mc_emoji))
+
+    @commands.guild_only()
+    @commands.command(aliases=["scoate"])
+    async def withdraw(self, ctx, val=None):
+        if not val:
+            text = "**You need to input a value.**"
+            return await ctx.send(text)
+        pocket_coins, bank_coins = await self.bot.funx.get_coins(ctx.author.id)
+        if val in ["all", "max"]:
+            val = bank_coins
+        else:
+            if val.isdigit():
+                val = int(val)
+            else:
+                text = "**What kind of values are you trying to input? :anger:**"
+                return await ctx.send(text)
+        if val <= 0:
+            text = "**You can't do this.**"
+            return await ctx.send(text.format(self.mc_emoji))
+        if bank_coins < val:
+            text = "**You don't have this much {} (MC) in the bank.**"
+            return await ctx.send(text.format(self.mc_emoji))
+        pocket_coins += val
+        bank_coins -= val
+        await self.bot.funx.save_pocket(ctx.author.id, pocket_coins)
+        await self.bot.funx.save_bank(ctx.author.id, bank_coins)
+        text = ":money_with_wings: **| Transfer successful. :) You have withdrawn {} {} from the bank.**"
+        await ctx.send(text.format(val, self.mc_emoji))
+
+    @commands.guild_only()
+    @commands.command(aliases=["tf"])
+    async def transfer(self, ctx, targ=None, val=None):
+        # todo: add reason
+        if not (targ and val):
+            text = "**You need to enter a username and a value.**"
+            return await ctx.send(text)
+        targ = self.bot.funx.search_for_member(ctx, targ)
+        if not targ:
+            text = "**Invalid username.**"
+            return await ctx.send(text)
+        if targ.id == ctx.author.id:
+            text = "Sorry, {} you can't transfer money to yourself!"
+            return await ctx.send(text.format(ctx.author.name))
+        user_pocket, user_bank = await self.bot.funx.get_coins(ctx.author.id)
+        if val in ["all", "max"]:
+            val = user_bank
+        else:
+            if val.isdigit():
+                val = int(val)
+            else:
+                text = "**What kind of values are you trying to input? :anger:**"
+                return await ctx.send(text)
+        if val <= 0:
+            text = "**You can't do this.**"
+            return await ctx.send(text.format(self.mc_emoji))
+        if user_bank < val:
+            text = "**You don't have this much {} (MC) in the bank.**"
+            return await ctx.send(text.format(self.mc_emoji))
+
+        def check(reaction, user):
+            return user.id == ctx.author.id and str(reaction.emoji) in ["✅", "❎"]
+
+        resp = await ctx.send("Transfer {} {} to {}?".format(val, self.mc_emoji, targ))
+        await resp.add_reaction("✅")
+        await resp.add_reaction("❎")
+        try:
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=10, check=check)
+        except discord.errors.Forbidden:
+            await ctx.send("I need permission to add reactions!")
+        except asyncio.TimeoutError:
+            await ctx.send("I'll take this as a no...")
+        except Exception as e:
+            print(e)
+        else:
+            await resp.delete()
+            if str(reaction) == "❎":
+                text = ":money_with_wings: | {}, it seems like you changed your mind..."
+                await ctx.send(text.format(ctx.author.name))
+            elif str(reaction) == "✅":
+                user_bank -= val
+                targ_pocket, targ_bank = await self.bot.funx.get_coins(targ.id)
+                targ_bank += val
+                await self.bot.funx.save_bank(ctx.author.id, user_bank)
+                await self.bot.funx.save_bank(targ.id, targ_bank)
+                text = ":euro: **| {} {} transferred successfully to {}.**"
+                await ctx.send(text.format(val, self.mc_emoji, targ))
+                text = ":euro: | **Transfer notice**\nYou have received a transfer of {} {} from {}!"
+                await targ.send(text.format(val, self.mc_emoji, ctx.author))
 
 
 def setup(bot):
