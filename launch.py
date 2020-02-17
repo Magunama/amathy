@@ -23,6 +23,7 @@ async def start_bot():
     db_name = setts["db_name"]
     bot.owner_ids = set(setts["owner_ids"])
     bot.consts = setts["constants"]
+    bot.prefixes = setts["prefixes"]
     bot.pool = await aiomysql.create_pool(host=db_ip, port=3306, user=db_user, password=db_pass, db=db_name, minsize=10, maxsize=60)
     bot.funx = Funx(bot)
     await bot.start(token, bot=True, reconnect=True)

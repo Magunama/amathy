@@ -6,8 +6,7 @@ from os import listdir
 
 def get_prefix(bot, message):
     fullpref = list()
-    prefixes = ["a ", "ama "]
-    for k in prefixes:
+    for k in bot.prefixes:
         fullpref.extend(map(''.join, itertools.product(*zip(k.upper(), k.lower()))))
     return commands.when_mentioned_or(*fullpref)(bot, message)
 
@@ -31,7 +30,7 @@ def attach_cogs(bot):
 
 
 bot = commands.AutoShardedBot(command_prefix=get_prefix, fetch_offline_members=False, max_messages=1000, case_insensitive=True)
-# bot.remove_command('help')
+bot.remove_command('help')
 
 
 @bot.event

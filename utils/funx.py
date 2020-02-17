@@ -137,3 +137,65 @@ class Funx:
         val = val.strftime(self.date_format)
         script = f"insert into timers (user_id, {cat}) values ({uid}, \"{val}\") on duplicate key update {cat}=\"{val}\""
         await self.run_cq(script)
+
+    async def embed_menu(self, ctx, emb_list: list, message=None, page=0, timeout=30):
+        cog = emb_list[page]
+        expected = ["➡", "⬅", "❌"]
+        numbs = {
+            "next": "➡",
+            "back": "⬅",
+            "exit": "❌"
+        }
+
+        def check(react, user):
+            return user.id == ctx.message.author.id and str(react.emoji) in expected and react.message.id == message.id
+
+        if not message:
+            message = await ctx.send(embed=cog)
+            await message.add_reaction("⬅")
+            await message.add_reaction("❌")
+            await message.add_reaction("➡")
+        else:
+            await message.edit(embed=cog)
+        try:
+            react, user = await self.bot.wait_for('reaction_add', check=check, timeout=timeout)
+        except Exception as e:
+            print(e)
+            react = None
+        if react is None:
+            try:
+                try:
+                    await message.clear_reactions()
+                except:
+                    await message.remove_reaction("⬅", self.bot.user)
+                    await message.remove_reaction("❌", self.bot.user)
+                    await message.remove_reaction("➡", self.bot.user)
+            except Exception as e:
+                print(e)
+            return None
+        reacts = {v: k for k, v in numbs.items()}
+        react = reacts[react.emoji]
+        if react == "next":
+            page += 1
+            next_page = page % len(emb_list)
+            try:
+                await message.remove_reaction("➡", ctx.message.author)
+            except:
+                pass
+            return await self.embed_menu(ctx, emb_list, message=message,
+                                         page=next_page, timeout=timeout)
+        elif react == "back":
+            page -= 1
+            next_page = page % len(emb_list)
+            try:
+                await message.remove_reaction("⬅", ctx.message.author)
+            except:
+                pass
+            return await self.embed_menu(ctx, emb_list, message=message,
+                                         page=next_page, timeout=timeout)
+
+        else:
+            try:
+                return await message.delete()
+            except Exception as e:
+                print(e)

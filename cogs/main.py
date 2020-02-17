@@ -24,7 +24,7 @@ class Main(commands.Cog):
 
     @commands.command(aliases=["sys"])
     async def system(self, ctx):
-        """Shows system resources."""
+        """Info|Shows system resources.|"""
         # todo: add cooldown
         fields = []
 

@@ -11,24 +11,26 @@ class Embed:
     def color_list(self):
         return self.colors
 
-    def make_emb(self, title, desc, author, fields, footer=None, url=None, timestamp=None, empty_field=False):
+    def make_emb(self, title, desc, author=None, fields=None, footer=None, url=None, timestamp=None, empty_field=False):
         embed = discord.Embed(title=title, description=desc, color=random.choice(self.color_list()), url=url)
-        embed.set_author(name=author["name"], icon_url=author["icon_url"])
-        for field in fields:
-            name = field[0]
-            value = field[1]
+        if author:
+            embed.set_author(name=author["name"], icon_url=author["icon_url"])
+        if fields:
+            for field in fields:
+                name = field[0]
+                value = field[1]
 
-            if empty_field:
-                if not name:
-                    name = "\u200b"
-                if not value:
-                    value = "\u200b"
+                if empty_field:
+                    if not name:
+                        name = "\u200b"
+                    if not value:
+                        value = "\u200b"
 
-            inline = field[2]
-            if not inline:
-                inline = True
-            if name and value:
-                embed.add_field(name=name, value=value, inline=inline)
+                inline = field[2]
+                if not inline:
+                    inline = True
+                if name and value:
+                    embed.add_field(name=name, value=value, inline=inline)
         if not timestamp:
             timestamp = datetime.datetime.utcnow()
         embed.timestamp = timestamp

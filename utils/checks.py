@@ -1,6 +1,7 @@
 from discord.ext import commands
 import os
 from shutil import copyfile
+import discord
 
 
 def check_folder(path):
@@ -52,5 +53,17 @@ def is_guild_admin():
         if u.guild_permissions.administrator:
             return True
         await ctx.send("No access! You need to be a server administrator to run this command.")
+        return False
+    return commands.check(inside_check)
+
+
+def is_nsfw():
+    async def inside_check(ctx):
+        if ctx.channel.is_nsfw():
+            return True
+        desc = "NSFW commands can only be used in NSFW marked channels."
+        emb = discord.Embed(title="You can't use this here!", description=desc)
+        emb.set_image(url="https://i.imgur.com/oe4iK5i.gif")
+        await ctx.send(embed=emb)
         return False
     return commands.check(inside_check)

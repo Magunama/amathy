@@ -14,7 +14,7 @@ class Eval(commands.Cog):
     @is_creator()
     @commands.command(name='eval', aliases=["e"])
     async def _eval(self, ctx, *, body):
-        """Evaluates python code"""
+        """Utility|Evaluates python code|Creator permission"""
         env = {
             'ctx': ctx,
             'bot': self.bot,

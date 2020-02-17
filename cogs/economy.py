@@ -15,6 +15,7 @@ class Economy(commands.Cog):
     @commands.guild_only()
     @commands.command(aliases=["dailymc"])
     async def daily(self, ctx):
+        """Fun|Get your daily coins!|"""
         prev_coins = (await self.bot.funx.get_coins(ctx.author.id))[0]
         prev_time = (await self.bot.funx.get_timer(ctx.author.id, "daily"))[0]
         expected_time = prev_time + datetime.timedelta(days=1)  # cooldown
@@ -41,6 +42,7 @@ class Economy(commands.Cog):
     @commands.guild_only()
     @commands.command()
     async def stats(self, ctx, targ=None):
+        """Info|Shows information concerning your current stats.|"""
         targ = self.bot.funx.search_for_member(ctx, targ)
         if not targ:
             targ = ctx.message.author
@@ -110,6 +112,7 @@ class Economy(commands.Cog):
     @commands.guild_only()
     @commands.command(aliases=["baga"])
     async def deposit(self, ctx, val=None):
+        """Fun|Deposit coins in the bank.|"""
         if not val:
             text = "**You need to input a value.**"
             return await ctx.send(text)
@@ -138,6 +141,7 @@ class Economy(commands.Cog):
     @commands.guild_only()
     @commands.command(aliases=["scoate"])
     async def withdraw(self, ctx, val=None):
+        """Fun|Withdraw coins from the bank.|"""
         if not val:
             text = "**You need to input a value.**"
             return await ctx.send(text)
@@ -166,6 +170,7 @@ class Economy(commands.Cog):
     @commands.guild_only()
     @commands.command(aliases=["tf"])
     async def transfer(self, ctx, targ=None, val=None):
+        """Fun|Transfer coins to somebody.|"""
         # todo: add reason
         if not (targ and val):
             text = "**You need to enter a username and a value.**"
