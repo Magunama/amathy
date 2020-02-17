@@ -1,5 +1,5 @@
 {
-  "token": "YourTokenHere",
+  "token": "Bot Token Here",
   "db_ip": "127.0.0.1",
   "db_user": "root",
   "db_pass": "root",
@@ -10,6 +10,7 @@
     "utc_diff": 2,
     "date_format": "%Y-%m-%d %H:%M:%S",
     "mc_emoji_id": 677131708922855475,
-    "wolke_token": "Weeb.sh Token"
+    "weeb_token": "Weeb.sh Token",
+    "dbl_token": "Discordbots.org Token"
   }
 }

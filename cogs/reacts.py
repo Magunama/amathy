@@ -20,7 +20,7 @@ class Reacts(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.funx = bot.funx
-        self.wolke = bot.consts["wolke_token"]
+        self.wolke = bot.consts["weeb_token"]
 
     async def weeb_power(self, r_type, ret):
         params = {"type": r_type, "hidden": "false"}
@@ -499,7 +499,7 @@ class Reacts(commands.Cog):
     @is_nsfw()
     @commands.cooldown(3, 8, BucketType.user)
     async def hentai(self, context):
-        """Media|Hentai and chill with your senpai/waifu!|"""
+        """Explicit|Hentai and chill with your senpai/waifu!|"""
         author = context.message.author.mention
         hentai = "**{0} onii-chan, baka, ecchi!**"
         script = "SELECT * FROM hentai"

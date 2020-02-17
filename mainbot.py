@@ -37,6 +37,7 @@ bot.remove_command('help')
 async def on_ready():
     print('[INFO] Using account {} with id {}'.format(bot.user.name, bot.user.id))
     print("[INFO] Using discord.py version " + str(discord.__version__))
+    bot.invite_link = "https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=2117463255".format(bot.user.id)
     print("Loaded plugins: ", end="")
     attach_cogs(bot)
     print()

@@ -11,7 +11,7 @@ class Help(commands.Cog):
         subcmds = []
         if hasattr(cmd, "commands"):
             subcmds = cmd.commands
-        title = f"[Amathy v1.8] - Help - {cmd.name} | " + "|".join(cmd.aliases)
+        title = f"[Amathy v1.8] - Help - {cmd.name} | " + " | ".join(cmd.aliases)
         help_str = cmd.help
         desc = req = cat = "N/A"
         if help_str:
@@ -20,12 +20,17 @@ class Help(commands.Cog):
         desc = f"You have accessed the instruction manual.\nBelow are details about the `{cmd.name}` command.\n\n**[Category]**: {cat}\n**[Description]**: {desc}\n**[Requirements]**: {req}"
         fields = []
         for cmd in subcmds:
-            fields.append([cmd.name, cmd.help, False])
+            help_str = cmd.help.split("|")[1]
+            fields.append([cmd.name, help_str, False])
         footer = "1/1 - This is all I can tell you. ^^ I don't know anything more than this."
         return Embed().make_emb(title, desc, None, fields, footer)
 
     async def main_page(self, ctx):
-        links = "\n[Portal](https://animevibe.ro) ✤ [Website](https://amathy.moe) ✤ [Support server](https://discord.gg/67GTGHg) ✤ [Vote me](https://discordbots.org/bot/410488336344547338/vote)\n"
+        website = "https://amathy.moe"
+        supp_server = "https://discord.gg/D87ykxd"
+        vote = "https://discordbots.org/bot/410488336344547338/vote"
+        invite = self.bot.invite_link
+        links = f"\n[Website!]({website}) ✤ [Support server!]({supp_server}) ✤ [Vote me & get rewards!]({vote}) ✤ [Invite me!]({invite})\n"
         emb_text = "Do you need my instruction manual?\n** ▶ Available prefixes**: default: {}; custom: `Unavailable`\n**▶ Useful links**:{}**▶ Below are the corresponding categories to my commands**:"
         emb_cat = "Music, yay|Reactions + others|Help the server|Just for fun|For information|Not for everyone".split("|")
         title = "[Amathy v1.8] - Help - Main Page"  # todo: some dynamic versioning?
@@ -36,7 +41,7 @@ class Help(commands.Cog):
         desc = emb_text.format(pref_string, links)
         fields = []
         for i in range(0, 6):
-            fields.append([self.help_categories[i], emb_cat[i], True])
+            fields.append([self.help_categories[i].title(), emb_cat[i], True])
         footer = "1/1 - To see details about a certain category, use ama help [category]."
         embed = Embed().make_emb(title, desc, None, fields, footer)
         await ctx.send(embed=embed)
@@ -49,7 +54,7 @@ class Help(commands.Cog):
                 if "|" in help_str:
                     c_cat = help_str.split("|")[0]
                     if c_cat.lower() == cat.lower():
-                        showlist.append([c.name, "|".join(c.aliases), True])
+                        showlist.append([c.name, " | ".join(c.aliases), True])
         showlen = len(showlist)
         if showlen % 10 == 0:
             lastpage = int(showlen / 10)
@@ -91,11 +96,9 @@ class Help(commands.Cog):
 
     @commands.command(aliases=["h"])
     async def help(self, ctx, args=None):
-        """Utility|Shows the help page.|"""
-
+        """Info|Shows the help page.|"""
         if not args:
             return await self.main_page(ctx)
-
         else:
             args = args.lower()
             if args in self.help_categories:

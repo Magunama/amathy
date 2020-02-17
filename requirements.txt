@@ -2,3 +2,4 @@ asyncio
 aiomysql
 discord.py[voice]
 psutil
+lavalink
