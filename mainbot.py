@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
 import itertools
-from os import listdir
+import os
+import json
+import datetime
 
 
 def get_prefix(bot, message):
@@ -13,7 +15,7 @@ def get_prefix(bot, message):
 
 def attach_cogs(bot):
     cog_blacklist = []
-    cog_list = listdir("cogs/")
+    cog_list = os.listdir("cogs/")
     for extension in cog_list:
         if not ".py" in extension:
             continue
@@ -48,3 +50,119 @@ async def on_ready():
 async def on_shard_ready(shard):
     info = "\u001b[0m[\u001b[32;1mINFO\u001b[0m]"
     print(f'{info} Shard number {shard} is ready.')
+
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    # todo: optimization
+    m_id = payload.message_id
+    g_id = payload.guild_id
+    u_id = payload.user_id
+    c_id = payload.channel_id
+    emoji = payload.emoji
+    if not u_id == bot.user.id:
+        c_obj = bot.get_channel(c_id)
+        if c_obj:
+            try:
+                m_obj = await c_obj.fetch_message(m_id)
+            except Exception as e:
+                m_obj = None
+            if m_obj:
+                if m_obj.author == bot.user:
+                    folder = "data/reactrole/{}".format(g_id)
+                    path = "{}/reactrole.json".format(folder)
+                    if not os.path.isfile(path):
+                        reactrole = {}
+                    else:
+                        with open(path, 'r') as fp:
+                            reactrole = json.load(fp)
+                    if str(m_id) in reactrole:
+                        options = reactrole[str(m_id)]["opt"]
+                        for i in range(0, len(options)):
+                            if str(emoji) == options[i][0]:
+                                role_id = options[i][1].replace("<@&", "").replace(">", "")
+                                g_obj = c_obj.guild
+                                member = g_obj.get_member(u_id)
+                                role_obj = g_obj.get_role(int(role_id))
+                                await member.add_roles(role_obj)
+                                break
+
+
+@bot.event
+async def on_guild_join(guild):
+    # todo: optimization
+    # time_utc = datetime.datetime.utcnow()
+    # utc_diff = 3  # Ro = utc +3
+    # time_result = time_utc + datetime.timedelta(hours=utc_diff)
+    # time_result = time_result.strftime("%Y-%m-%d %H:%M:%S")
+    # ownname = str(guild.get_member(guild.owner_id))
+    # script = "INSERT INTO serverlist(guild_id, owner_id, owner_name, first_join, anc_chan_id, join_date, `left`) VALUES (\"{}\", \"{}\", \"{}\", \"1\", \"not_set\", \"{}\", \"0\") ON DUPLICATE KEY UPDATE anc_chan_id=\"not_set\", join_date=\"{}\""
+    # await bot.funx.run_cq(script.format(guild.id, guild.owner_id, ownname, time_result, time_result), script.format(guild.id, guild.owner_id, "[Bad_Name]", time_result, time_result))
+
+    botobj = guild.get_member(bot.user.id)
+    chanlist = guild.channels
+    print("Joined new guild {} with {} members. --- Now sending on_join message...".format(guild.name, guild.member_count))
+    jointext = "[EN] Hello, everyone! I'm **Amathy**, your new bot. I'm __good__ at **playing music** and I have fun games. You can find my command list by using `ama help`. Please be patient with me as I am currently __under development__. For more information and bug reports, contact my developers on my __support server__, found in **the link section** of the help command. Thank you for choosing me~~ :smile:"
+    for k in chanlist:
+        if isinstance(k, discord.TextChannel):
+            perms = k.permissions_for(botobj)
+            if perms.send_messages:
+                await k.send(jointext)
+                break
+    print("On_join message successfully sent to {}".format(guild.name))
+    for oid in bot.owner_ids:
+        owner = bot.get_user(oid)
+        await owner.send("Joined new guild {} with {} members.".format(guild.name, guild.member_count))
+
+
+@bot.event
+async def on_guild_remove(guild):
+    print("Left guild: ", guild.name)
+    # script = "UPDATE serverlist SET `left`=\"1\" WHERE guild_id=\"{}\""
+    # await bot.funx.run_cq(script.format(guild.id))
+    for oid in bot.owner_ids:
+        owner = bot.get_user(oid)
+        await owner.send("Left guild {} with {} members.".format(guild.name, guild.member_count))
+
+
+@bot.event
+async def on_member_join(member):
+    # todo: optimization
+    await bot.wait_until_ready()
+    if member.bot:
+        return
+    autoroles, joinmsgs = bot.funx.autoroles, bot.funx.joinmsgs
+    serv_obj = member.guild
+    serv_str = str(serv_obj.id)
+    if serv_str in autoroles:
+        roleobj = serv_obj.get_role(int(autoroles[serv_str]))
+        basictext = "[EN] Welcome to **{0}**! You were given the following role: `{1}`".format(serv_obj.name, roleobj.name)
+        await member.add_roles(roleobj)
+        await member.send(basictext)
+    if serv_str in joinmsgs:
+        msg = joinmsgs[serv_str]
+        basictext = "[EN] A welcome message has been set for you: \n{}".format(msg)
+        member.send(basictext)
+
+
+@bot.event
+async def on_member_leave(member):
+    pass
+
+
+@bot.event
+async def on_member_update(before, after):
+    # todo: optimization
+    await bot.wait_until_ready()
+    if after.bot:
+        return
+    autoroles, joinmsgs = bot.funx.autoroles, bot.funx.joinmsgs
+    serv_obj = after.guild
+    serv_str = str(serv_obj.id)
+    if serv_str in autoroles:
+        roleobj = serv_obj.get_role(int(autoroles[serv_str]))
+        if not roleobj in before.roles:
+            try:
+                await after.add_roles(roleobj)
+            except discord.errors.Forbidden:
+                pass

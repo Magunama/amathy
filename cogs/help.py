@@ -11,7 +11,9 @@ class Help(commands.Cog):
         subcmds = []
         if hasattr(cmd, "commands"):
             subcmds = cmd.commands
-        title = f"[Amathy v1.8] - Help - {cmd.name} | " + " | ".join(cmd.aliases)
+        title = f"[Amathy v1.8] - Help - {cmd.name}"
+        if cmd.aliases:
+            title += " | " + " | ".join(cmd.aliases)
         help_str = cmd.help
         desc = req = cat = "N/A"
         if help_str:
@@ -20,8 +22,11 @@ class Help(commands.Cog):
         desc = f"You have accessed the instruction manual.\nBelow are details about the `{cmd.name}` command.\n\n**[Category]**: {cat}\n**[Description]**: {desc}\n**[Requirements]**: {req}"
         fields = []
         for cmd in subcmds:
+            cmd_str = cmd.name
+            if cmd.aliases:
+                cmd_str += " | " + " | ".join(cmd.aliases)
             help_str = cmd.help.split("|")[1]
-            fields.append([cmd.name, help_str, False])
+            fields.append([cmd_str, help_str, False])
         footer = "1/1 - This is all I can tell you. ^^ I don't know anything more than this."
         return Embed().make_emb(title, desc, None, fields, footer)
 
