@@ -38,7 +38,7 @@ class Main(commands.Cog):
         ret = await commands.clean_content().convert(ctx, ret)
         await ctx.send(ret)
 
-    @commands.command(pass_context=True, aliases=[])
+    @commands.command( aliases=[])
     async def ping(self, ctx):
         """Info|Marco! Polo!|"""
         pinger = await ctx.send('__*`Pinging...`*__')
@@ -194,7 +194,7 @@ class Main(commands.Cog):
                 text = "{} got away from the ban, *for now*."
                 await ctx.send(text.format(target))
 
-    @commands.group(pass_context=True, aliases=["guild"])
+    @commands.group(aliases=["guild"])
     @commands.guild_only()
     async def server(self, ctx):
         """Utility|Shows server info/settings.|"""
@@ -202,8 +202,8 @@ class Main(commands.Cog):
             emb = await self.bot.cogs["Help"].send_help(ctx.command)
             await ctx.send(embed=emb)
 
-    @server.command(pass_context=True)
-    async def info(self, ctx):
+    @server.command(name="info")
+    async def s_info(self, ctx):
         """Info|Returns some server information.|"""
         embed = discord.Embed(title="Guild details:")
         embed.set_author(name="{} ({})".format(ctx.guild.name, ctx.guild.id))
@@ -244,7 +244,7 @@ class Main(commands.Cog):
             embed.add_field(name="Some emojis", value=emoji_string, inline=True)
         await ctx.send(embed=embed)
 
-    @server.command(pass_context=True, aliases=["roles"])
+    @server.command(aliases=["roles"])
     async def roleids(self, ctx):
         """Utility|Returns a list of roles in the guild.|"""
         lista = ctx.message.guild.roles
@@ -280,7 +280,7 @@ class Main(commands.Cog):
         else:
             await ctx.send("I've done everything you asked me to!")
 
-    @bot.command(pass_context=True, aliases=["stats"])
+    @bot.command(aliases=["stats"])
     @commands.guild_only()
     async def info(self, ctx):
         """Info|Returns some information about the bot.|"""
@@ -318,7 +318,7 @@ class Main(commands.Cog):
         embed.set_footer(text="© 2018-2020 - Copyright: AnimeVibe - Project Amathy")
         await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True, aliases=["dadjoke"])
+    @commands.command(aliases=["dadjoke"])
     async def joke(self, ctx):
         """Fun|Sends a Dad Joke!|"""
         headers = {"Accept": "application/json"}
@@ -329,7 +329,7 @@ class Main(commands.Cog):
             await session.close()
         await ctx.send(resp["joke"])
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def avatar(self, ctx, *, targ=None):
         """Info|Returns a user's avatar.|"""
         if not targ:
@@ -343,7 +343,7 @@ class Main(commands.Cog):
         emb.set_image(url=user.avatar_url)
         await ctx.send(embed=emb)
 
-    @commands.command(pass_context=True, aliases=["rr", "reactionrole"])
+    @commands.command(aliases=["rr", "reactionrole"])
     async def reactrole(self, ctx, op=None):
         """Utility|Reaction -> Role System.|"""
         # todo: optimization
@@ -552,7 +552,7 @@ class Main(commands.Cog):
             else:
                 await ctx.send("The list of ReactRoles is empty. Add one with `a rr add`.")
 
-    @commands.group(pass_context=True)
+    @commands.group()
     @commands.has_permissions(administrator=True)
     async def welcome(self, ctx):
         """Utility|Welcome Role/Message|Administrator permission."""
@@ -562,7 +562,7 @@ class Main(commands.Cog):
             text = "Available actions:\n`a welcome role` to change the welcome role;\n`a welcome msg` to change the welcome message."
             await ctx.send(text)
 
-    @welcome.command(pass_context=True)
+    @welcome.command()
     async def role(self, ctx, roleid=None):
         """Utility|Set a welcome role.|"""
         autoroles, joinmsgs = self.bot.funx.autoroles, self.bot.funx.joinmsgs
@@ -594,7 +594,7 @@ class Main(commands.Cog):
         else:
             await ctx.send("Something went wrong! Are you sure you gave me a valid id?")
 
-    @welcome.command(pass_context=True)
+    @welcome.command()
     async def msg(self, ctx, msg=None):
         """Utility|Set a welcome message.|"""
         autoroles, joinmsgs = self.bot.funx.autoroles, self.bot.funx.joinmsgs

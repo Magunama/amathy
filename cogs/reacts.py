@@ -52,7 +52,7 @@ class Reacts(commands.Cog):
         cats = data["types"]
         return ", ".join(cats)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def punch(self, ctx, target=None):
         """Media|Punch your friends/enemies!|"""
@@ -61,7 +61,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets punched by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("punch", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def grope(self, ctx, target=None):
         """Media|Grope your senpai/waifu!|"""
@@ -88,7 +88,7 @@ class Reacts(commands.Cog):
             ret = "{0} made {1} think!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("thinking", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def greet(self, ctx, target=None):
         """Media|Greet in style!|"""
@@ -97,7 +97,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets greeted by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("greet", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def insult(self, ctx, target=None):
         """Media|Get rekt!|"""
@@ -106,7 +106,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets insulted by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("insult", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def lick(self, ctx, target=None):
         """Media|Delicious lick!|"""
@@ -115,7 +115,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets licked by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("lick", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def smug(self, ctx, target=None):
         """Media|Smug like a boss!|"""
@@ -124,7 +124,7 @@ class Reacts(commands.Cog):
             ret = "{0} makes a smug face to {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("smug", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def wag(self, ctx, target=None):
         """Media|Show people how happy you are!|"""
@@ -133,7 +133,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets wagged by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("wag", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def bite(self, ctx, target=None):
         """Media|Bite strong like a dog!|"""
@@ -142,7 +142,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets bit by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("bite", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def slap(self, ctx, target=None):
         """Media|Slap the shit out of people!|"""
@@ -151,7 +151,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets slapped by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("slap", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def tickle(self, ctx, target=None):
         """Media|Tickle them toes!|"""
@@ -160,7 +160,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets tickled by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("tickle", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def stare(self, ctx, target=None):
         """Media|Stare...|"""
@@ -169,7 +169,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets stared at by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("stare", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def owo(self, ctx, target=None):
         """Media|Notices....owo|"""
@@ -178,7 +178,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets some owo from {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("owo", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def smile(self, ctx, target=None):
         """Media|Be happy!|"""
@@ -187,7 +187,7 @@ class Reacts(commands.Cog):
             ret = "{0} made {1} smile!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("smile", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def pout(self, ctx, target=None):
         """Media|A cute pout never hurt anybody.|"""
@@ -196,7 +196,7 @@ class Reacts(commands.Cog):
             ret = "{0} made {1} pout!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("pout", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def nom(self, ctx, target=None):
         """Media|Monch the haters!|"""
@@ -214,7 +214,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets some Megumin from {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("megumin", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def dance(self, ctx, target=None):
         """Media|Dance 'till you break your legs!|"""
@@ -223,7 +223,7 @@ class Reacts(commands.Cog):
             ret = "{0} made {1} dance!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("dance", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def cuddle(self, ctx, target=None):
         """Media|Cuddle with your senpai/waifu!|"""
@@ -232,7 +232,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets cuddled by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("cuddle", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def cry(self, ctx, target=None):
         """Media|Cry in a corner like you always do!|"""
@@ -241,7 +241,7 @@ class Reacts(commands.Cog):
             ret = "{0} made {1} cry!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("cry", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def blush(self, ctx, target=None):
         """Media|*blushes in japanese*|"""
@@ -250,7 +250,7 @@ class Reacts(commands.Cog):
             ret = "{0} made {1} blush!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("blush", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def awoo(self, ctx, target=None):
         """Media|Awoo at the glowing moon!|"""
@@ -268,7 +268,7 @@ class Reacts(commands.Cog):
             ret = "{0} and {1} play with a neko!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("neko", ret)))
 
-    @commands.command(pass_context=True, aliases=["nya2"])
+    @commands.command(aliases=["nya2"])
     @commands.cooldown(3, 8, BucketType.user)
     async def neko2(self, ctx):
         """Media|Nekos! Warning: Some lewd nekos exist! :eyes:|"""
@@ -280,7 +280,7 @@ class Reacts(commands.Cog):
         embed.set_image(url=nekos['neko'])
         await ctx.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @is_nsfw()
     @commands.cooldown(3, 8, BucketType.user)
     async def porn(self, context):
@@ -294,7 +294,7 @@ class Reacts(commands.Cog):
         embed.set_image(url=link.format(choice))
         await context.send(embed=embed)
 
-    @commands.command(pass_context=True, aliases=["bang"])
+    @commands.command(aliases=["bang"])
     @commands.cooldown(3, 8, BucketType.user)
     async def kill(self, ctx, target=None):
         """Media|Kill your foes in a stylish manner!|"""
@@ -303,7 +303,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets killed by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("bang", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def pat(self, ctx, target=None):
         """Media|Pat them heads!|"""
@@ -312,7 +312,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets patted by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("pat", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def shrug(self, ctx, target=None):
         """Media|Shrug like a boss!|"""
@@ -321,7 +321,7 @@ class Reacts(commands.Cog):
             ret = "{0} made {1} shrug!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("shrug", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def dab(self, ctx, target=None):
         """Media|Dab on them haters!|"""
@@ -330,7 +330,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets dabbed on by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("dab", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def teehee(self, ctx, target=None):
         """Media|Troll :100:|"""
@@ -348,7 +348,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets a highfive from {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("highfive", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def baka(self, ctx, target=None):
         """Media|Baka baka baka!|"""
@@ -357,7 +357,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets called a baka by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("baka", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def handhold(self, ctx, target=None):
         """Media|Hold hands. That's what you're meant to do.|"""
@@ -366,7 +366,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets his/her hand hold by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("handholding", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def wasted(self, ctx, target=None):
         """Media|The cops got you!|"""
@@ -375,7 +375,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets wasted by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("wasted", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def sleepy(self, ctx, target=None):
         """Media|zzz...|"""
@@ -384,7 +384,7 @@ class Reacts(commands.Cog):
             ret = "{0} makes {1} feel sleepy!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("sleepy", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def poke(self, ctx, target=None):
         """Media|Did you just poke your eyeball?|"""
@@ -393,7 +393,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets poked by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("poke", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def love(self, ctx, target=None):
         """Media|The love you never had...|"""
@@ -402,7 +402,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets loved by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("deredere", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def kiss(self, ctx, target=None):
         """Media|Kiss your senpai/waifu!|"""
@@ -411,7 +411,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets kissed by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("kiss", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def hug(self, ctx, target=None):
         """Media|Hug your senpai/waifu!"""
@@ -420,7 +420,7 @@ class Reacts(commands.Cog):
             ret = "{0} gets hugged by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("hug", ret)))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(1, 8, BucketType.user)
     async def weeb(self, ctx, target=None):
         """Media|Be the number one Weeb.sh fan!|"""
@@ -431,7 +431,7 @@ class Reacts(commands.Cog):
         ret = "You're the number one Weeb.sh fan now!"
         await ctx.send(embed=(await self.weeb_power(target, ret)))
 
-    @commands.command(pass_context=True, aliases=["birb", "tweet"])
+    @commands.command(aliases=["birb", "tweet"])
     @commands.cooldown(3, 8, BucketType.user)
     async def bird(self, ctx):
         """Media|See? A random bird!|"""
@@ -443,7 +443,7 @@ class Reacts(commands.Cog):
             await session.close()
         await ctx.send(url)
 
-    @commands.command(pass_context=True, aliases=['foxo'])
+    @commands.command(aliases=['foxo'])
     @commands.cooldown(3, 8, BucketType.user)
     async def fox(self, ctx):
         """Media|See? A random fox!|"""
@@ -468,7 +468,7 @@ class Reacts(commands.Cog):
         ret = "Here's a dog for you, {}!".format(ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("animal_dog", ret)))
 
-    @commands.command(pass_context=True, aliases=['catto2'])
+    @commands.command(aliases=['catto2'])
     @commands.cooldown(3, 8, BucketType.user)
     async def cat2(self, ctx):
         """Media|See? A random cat!|"""
@@ -480,7 +480,7 @@ class Reacts(commands.Cog):
         em = discord.Embed()
         await ctx.send(content=ctx.message.author.mention, embed=em.set_image(url=data[0]['url']))
 
-    @commands.command(pass_context=True, aliases=['doggo2'])
+    @commands.command(aliases=['doggo2'])
     @commands.cooldown(3, 8, BucketType.user)
     async def dog2(self, ctx):
         """Media|See? A random dog!|"""
@@ -495,7 +495,7 @@ class Reacts(commands.Cog):
         em = discord.Embed()
         await ctx.send(content=ctx.message.author.mention, embed=em.set_image(url=res))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @is_nsfw()
     @commands.cooldown(3, 8, BucketType.user)
     async def hentai(self, context):
@@ -510,7 +510,7 @@ class Reacts(commands.Cog):
         embed.set_image(url=image)
         await context.send(embed=embed)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
     async def anime(self, context):
         """Media|Surf for some anime images!|"""
