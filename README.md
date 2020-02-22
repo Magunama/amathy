@@ -9,6 +9,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 * Python 3.6+ working environment
+* PostgreSQL 12+ database
 
 All other requirements are listed in the requirements.txt file.
 
@@ -44,7 +45,7 @@ See also the list of [contributors](https://github.com/Magunama/amathy-slave/gra
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 

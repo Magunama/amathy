@@ -502,8 +502,8 @@ class Reacts(commands.Cog):
         """Explicit|Hentai and chill with your senpai/waifu!|"""
         author = context.message.author.mention
         hentai = "**{0} onii-chan, baka, ecchi!**"
-        script = "SELECT * FROM hentai"
-        data = await self.funx.run_q(script, "all")
+        script = "SELECT * FROM amathy.hentai"
+        data = await self.funx.fetch_many(script)
         index, image = random.choice(data)
         embed = discord.Embed(title=f"HentaiVibe Api V 0.3 | Hentai link [{index}]", description=hentai.format(author), colour=discord.Colour.purple(), url=image)
         embed.set_footer(text="Image won't load? Report broken link!")

@@ -1,5 +1,5 @@
 asyncio
-aiomysql
+asyncpg
 discord.py[voice]
 psutil
 lavalink

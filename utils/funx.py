@@ -89,7 +89,7 @@ class Funx:
         server = ctx.guild
         user = None
         if len(ctx.message.mentions) > 0:
-            return ctx.essage.mentions[0]
+            return ctx.message.mentions[0]
         if targ:
                 user = self.get_member_by_id(server, targ) or self.get_member_named(server, targ.lower())
         return user
@@ -97,41 +97,32 @@ class Funx:
     def seconds2string(self, seconds, lang="en"):
         return self.delta2string(datetime.timedelta(seconds=seconds), lang)
 
-    async def run_q(self, sql, multi=False):
-        async with self.bot.pool.acquire() as conn:
-            print("Total Connections: {0.size} Free Connections: {0.freesize} Script: {1}".format(self.bot.pool, sql))
-            # aiomysql.DictCursor
-            async with conn.cursor() as cur:
-                await cur.execute(sql)
-                if not multi:
-                    return await cur.fetchone()
-                return await cur.fetchall()
+    async def fetch_one(self, query):
+        return await self.bot.pool.fetchrow(query)
 
-    async def run_cq(self, sql, sql_err=None):
-        async with self.bot.pool.acquire() as conn:
-            print("Total Connections: {0.size} Free Connections: {0.freesize} Script: {1}".format(self.bot.pool, sql))
-            async with conn.cursor() as cur:
-                try:
-                    await cur.execute(sql)
-                except Exception as e:
-                    print("Eroare executie sql: {}".format(e))
-                    if sql_err:
-                        await cur.execute(sql_err)
-                await conn.commit()
+    async def fetch_many(self, query):
+        return await self.bot.pool.fetch(query)
+
+    async def execute(self, query):
+        # print("Total Connections: {0.size} Free Connections: {0.freesize} Script: {1}".format(self.bot.pool, sql))
+        connection = await self.bot.pool.acquire()
+        async with connection.transaction():
+            await self.bot.pool.execute(query)
+        await self.bot.pool.release(connection)
 
     async def get_coins(self, user_id):
-        script = f"select pocket, bank from coins where user_id={user_id}"
-        data = await self.bot.funx.run_q(script)
+        script = f"select pocket, bank from amathy.coins where user_id='{user_id}'"
+        data = await self.bot.funx.fetch_one(script)
         if not data:
-            data = (0, 0)
+            return 0, 0
         return data
 
     async def get_timer(self, user_id, cat):
-        script = f"select {cat} from timers where user_id={user_id}"
-        data = await self.bot.funx.run_q(script)
+        script = f"select {cat} from amathy.timers where user_id='{user_id}'"
+        data = await self.bot.funx.fetch_one(script)
         if not data:
-            data = (datetime.datetime(1, 1, 1),)
-        return data
+            return datetime.datetime(1, 1, 1)
+        return data[cat]
 
     async def save_pocket(self, uid, val):
         # urank = await self.get_rank(uid)
@@ -144,17 +135,17 @@ class Funx:
         # if val > climit:
         #     val = climit
         # todo: move to bank if limit is surpassed
-        script = f"insert into coins (user_id, pocket) values ({uid}, {val}) on duplicate key update pocket={val}"
-        await self.run_cq(script)
+        script = f"insert into amathy.coins (user_id, pocket) values ({uid}, {val}) on conflict (user_id) do update set pocket={val}"
+        await self.execute(script)
 
     async def save_bank(self, uid, val):
-        script = f"insert into coins (user_id, bank) values ({uid}, {val}) on duplicate key update bank={val}"
-        await self.run_cq(script)
+        script = f"insert into amathy.coins (user_id, bank) values ({uid}, {val}) on conflict (user_id) do update set bank={val}"
+        await self.execute(script)
 
     async def save_timer(self, uid, cat, val):
         val = val.strftime(self.date_format)
-        script = f"insert into timers (user_id, {cat}) values ({uid}, \"{val}\") on duplicate key update {cat}=\"{val}\""
-        await self.run_cq(script)
+        script = f"insert into amathy.timers (user_id, {cat}) values ({uid}, '{val}') on conflict (user_id) do update set {cat}='{val}'"
+        await self.execute(script)
 
     async def embed_menu(self, ctx, emb_list: list, message=None, page=0, timeout=30):
         cog = emb_list[page]

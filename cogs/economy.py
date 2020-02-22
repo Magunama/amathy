@@ -17,7 +17,7 @@ class Economy(commands.Cog):
     async def daily(self, ctx):
         """Fun|Get your daily coins!|"""
         prev_coins = (await self.bot.funx.get_coins(ctx.author.id))[0]
-        prev_time = (await self.bot.funx.get_timer(ctx.author.id, "daily"))[0]
+        prev_time = await self.bot.funx.get_timer(ctx.author.id, "daily")
         expected_time = prev_time + datetime.timedelta(days=1)  # cooldown
         expected_time = expected_time.replace(hour=0, minute=0, second=0)  # because cooldown should not be constant
         time_utc = datetime.datetime.utcnow()

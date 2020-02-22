@@ -2,7 +2,7 @@ import asyncio
 from mainbot import bot
 from utils.checks import check_create_folder, check_copy_file
 import json
-import aiomysql
+import asyncpg
 from utils.funx import Funx
 
 
@@ -24,7 +24,8 @@ async def start_bot():
     bot.owner_ids = set(setts["owner_ids"])
     bot.consts = setts["constants"]
     bot.prefixes = setts["prefixes"]
-    bot.pool = await aiomysql.create_pool(host=db_ip, port=3306, user=db_user, password=db_pass, db=db_name, minsize=10, maxsize=60)
+    db = await asyncpg.create_pool(host=db_ip, user=db_user, password=db_pass, database=db_name)
+    bot.pool = db
     bot.funx = Funx(bot)
     await bot.start(token, bot=True, reconnect=True)
 
