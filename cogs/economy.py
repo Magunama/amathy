@@ -81,7 +81,7 @@ class Economy(commands.Cog):
         #     climit, blimit = 80 * (10 ** 6), 170 * (10 ** 6)
         # else:
         #     climit, blimit = 20 * (10 ** 6), 100 * (10 **
-
+        xp, gems, vip_days = await self.bot.funx.get_stats(targ.id)
         pocket_coins, bank_coins = await self.bot.funx.get_coins(targ.id)
         total_coins = pocket_coins + bank_coins
         pocket_coins = self.bot.funx.group_digit(pocket_coins)
@@ -102,6 +102,9 @@ class Economy(commands.Cog):
         #     )
         fields = [["• Created:", created_at, False],
                   ["• Joined:", joined_at, False],
+                  ["• XP:", str(xp), False],
+                  ["• Gems:", str(gems), False],
+                  ["• VIP days:", str(vip_days), False],
                   ["• Pocket:", f"{pocket_coins} {self.mc_emoji}", False],
                   ["• Bank: ", f"{bank_coins} {self.mc_emoji}", False],
                   ["• Total: ", f"{total_coins} {self.mc_emoji}", False]]
@@ -227,6 +230,89 @@ class Economy(commands.Cog):
                 await ctx.send(text.format(val, self.mc_emoji, targ))
                 text = ":euro: | **Transfer notice**\nYou have received a transfer of {} {} from {}!"
                 await targ.send(text.format(val, self.mc_emoji, ctx.author))
+
+    @commands.guild_only()
+    @commands.group()
+    async def top(self, ctx):
+        """Info|Shows the top 10 users in different categories.|"""
+        if ctx.invoked_subcommand is None:
+            emb = await self.bot.cogs["Help"].send_help(ctx.command)
+            await ctx.send(embed=emb)
+
+    @top.command(aliases=["mc"])
+    async def coins(self, ctx):
+        """Info|Shows the top 10 people with the most MC.|"""
+        script = "select user_id, pocket, bank from amathy.coins"
+        data = await self.bot.funx.fetch_many(script)
+        top = dict()
+        for elem in data:
+            user_id, pocket, bank = elem
+            top[int(user_id)] = pocket + bank
+        sorted_top = sorted(top, key=top.get, reverse=True)
+        emb = Embed().make_emb("Global top - MC", "")
+        max_range = 10
+        if len(sorted_top) < max_range:
+            max_range = len(sorted_top)
+        for index in range(0, max_range):
+            user_id = sorted_top[index]
+            coins = self.bot.funx.group_digit(top[user_id])
+            if user_id == ctx.author.id:
+                text = "Author position >>> No. {}: {} - {} MC <<<"
+                emb.set_footer(text=text.format(index+1, ctx.author.name, coins))
+            user = self.bot.get_user(user_id)
+            if user:
+                emb.add_field(name="No. {}: {}".format(index + 1, user.name), value="{} {}".format(coins, self.mc_emoji))
+        await ctx.send(embed=emb)
+
+    @top.command()
+    async def xp(self, ctx):
+        """Info|Shows the top 10 people with the most XP.|"""
+        script = "select user_id, xp from amathy.stats"
+        data = await self.bot.funx.fetch_many(script)
+        top = dict()
+        for elem in data:
+            user_id, xp = elem
+            top[int(user_id)] = xp
+        sorted_top = sorted(top, key=top.get, reverse=True)
+        emb = Embed().make_emb("Global top - XP", "")
+        max_range = 10
+        if len(sorted_top) < max_range:
+            max_range = len(sorted_top)
+        for index in range(0, max_range):
+            user_id = sorted_top[index]
+            xp = self.bot.funx.group_digit(top[user_id])
+            if user_id == ctx.author.id:
+                text = "Author position >>> No. {}: {} - {} XP <<<"
+                emb.set_footer(text=text.format(index + 1, ctx.author.name, xp))
+            user = self.bot.get_user(user_id)
+            if user:
+                emb.add_field(name="No. {}: {}".format(index + 1, user.name), value="{} XP".format(xp))
+        await ctx.send(embed=emb)
+
+    @top.command()
+    async def votes(self, ctx):
+        """Info|Shows the top 10 people with the most votes.|"""
+        script = "select user_id, vote_num from amathy.votes"
+        data = await self.bot.funx.fetch_many(script)
+        top = dict()
+        for elem in data:
+            user_id, votes = elem
+            top[int(user_id)] = votes
+        sorted_top = sorted(top, key=top.get, reverse=True)
+        emb = Embed().make_emb("Global top - XP", "")
+        max_range = 10
+        if len(sorted_top) < max_range:
+            max_range = len(sorted_top)
+        for index in range(0, max_range):
+            user_id = sorted_top[index]
+            votes = self.bot.funx.group_digit(top[user_id])
+            if user_id == ctx.author.id:
+                text = "Author position >>> No. {}: {} - {} votes <<<"
+                emb.set_footer(text=text.format(index + 1, ctx.author.name, votes))
+            user = self.bot.get_user(user_id)
+            if user:
+                emb.add_field(name="No. {}: {}".format(index + 1, user.name), value="{} votes".format(votes))
+        await ctx.send(embed=emb)
 
 
 def setup(bot):

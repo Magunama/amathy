@@ -11,6 +11,8 @@
     "date_format": "%Y-%m-%d %H:%M:%S",
     "mc_emoji_id": 677131708922855475,
     "weeb_token": "Weeb.sh Token",
-    "dbl_token": "Discordbots.org Token"
+    "dbl_token": "Discordbots.org Token",
+    "dbl_webhook": "WebHook for posting vote records.",
+    "dbl_pass": "Post request check pass"
   }
 }

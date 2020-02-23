@@ -117,6 +117,20 @@ class Funx:
             return 0, 0
         return data
 
+    async def get_stats(self, user_id):
+        script = f"select xp, gems, vip_days from amathy.stats where user_id='{user_id}'"
+        data = await self.bot.funx.fetch_one(script)
+        if not data:
+            return 0, 0, 0
+        return data
+
+    async def get_xp(self, user_id):
+        script = f"select xp, from amathy.stats where user_id='{user_id}'"
+        data = await self.bot.funx.fetch_one(script)
+        if not data:
+            return 0
+        return data
+
     async def get_timer(self, user_id, cat):
         script = f"select {cat} from amathy.timers where user_id='{user_id}'"
         data = await self.bot.funx.fetch_one(script)

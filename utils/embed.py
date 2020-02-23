@@ -12,6 +12,7 @@ class Embed:
         return self.colors
 
     def make_emb(self, title, desc, author=None, fields=None, footer=None, url=None, timestamp=None, empty_field=False):
+        # todo: fix - check for None
         embed = discord.Embed(title=title, description=desc, color=random.choice(self.color_list()), url=url)
         if author:
             embed.set_author(name=author["name"], icon_url=author["icon_url"])

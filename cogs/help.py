@@ -28,7 +28,7 @@ class Help(commands.Cog):
             help_str = cmd.help.split("|")[1]
             fields.append([cmd_str, help_str, False])
         footer = "1/1 - This is all I can tell you. ^^ I don't know anything more than this."
-        return Embed().make_emb(title, desc, None, fields, footer)
+        return Embed().make_emb(title, desc, None, fields, footer, empty_field=True)
 
     async def main_page(self, ctx):
         website = "https://amathy.moe"
@@ -70,7 +70,7 @@ class Help(commands.Cog):
         desc = f"You have accessed the instruction manual.\nBelow are commands from the `{cat.title()}` category."
         if not showlist:
             footer = "1/1 - To see more details about a command, use ama help [command]."
-            emb = Embed().make_emb(title, desc, footer=footer)
+            emb = Embed().make_emb(title, desc, footer=footer, empty_field=True)
             return await ctx.send(embed=emb)
         embeds = []
         for i in range(1, lastpage + 1):

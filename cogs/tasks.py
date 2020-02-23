@@ -5,10 +5,67 @@ import aiohttp
 class Tasks(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.webhook_url = self.bot.consts["dbl_webhook"]
         self.post_gcount.start()
+        self.reward_votes.start()
 
     def cog_unload(self):
         self.post_gcount.cancel()
+        self.reward_votes.cancel()
+
+    async def send_whook(self, u_name, multi):
+        url = self.bot.webhook_url
+        pic = "https://i.imgur.com/enep9dS.png"
+        votestr = "\nTo vote, click [here](https://top.gg/bot/410488336344547338/vote)."
+        if multi > 1:
+            pic = "https://i.imgur.com/LjRefpO.png"
+        desc = "This vote gave them {} coins and {} xp.{}".format(300*multi, 100*multi, votestr)
+        title = "{} just voted!".format(u_name)
+        obj = {
+            "embeds": [
+                {
+                    "title": title,
+                    "description": desc,
+                    "thumbnail": {
+                        "url": pic
+                    },
+                    "footer": {
+                        "text": "If you can't donate, at least vote to support us!"
+                    }
+                }
+            ]
+        }
+        async with aiohttp.ClientSession() as session:
+            await session.post(url, json=obj)
+
+    @tasks.loop(minutes=1)
+    async def reward_votes(self):
+        """Reward users who voted the bot!"""
+        script = "select user_id, last_vote, rewards from amathy.votes where rewards>0;"
+        data = await self.bot.funx.fetch_many(script)
+        for elem in data:
+            user_id, last_vote, rewards = elem
+            coins = 300 * rewards
+            xp = 100 * rewards
+            script = "update amathy.votes set rewards=0 where user_id='{0}';".format(user_id)
+            await self.bot.funx.execute(script)
+            script = "insert into amathy.coins (user_id, bank) values ({0}, {1}) on conflict (user_id) do update set bank=coins.bank+{1};"
+            await self.bot.funx.execute(script.format(user_id, coins))
+            script = "insert into amathy.stats(user_id, xp) values ({0}, {1}) on conflict (user_id) do update set xp=stats.xp+{1};"
+            await self.bot.funx.execute(script.format(user_id, xp))
+            user = self.bot.get_user(int(user_id))
+            if not user:
+                user = user_id
+            else:
+                text = "Thank you for your vote! You have received {} coins and {} xp. Don't forget that you can vote me every 12 hours!"
+                await user.send(text.format(coins, xp))
+            await self.send_whook(user, rewards)
+            print("[INFO][Task] Rewarded", user, "for", rewards, "votes!")
+
+    @reward_votes.before_loop
+    async def before_reward_votes(self):
+        print('[INFO][Task] Vote reward task is active...')
+        await self.bot.wait_until_ready()
 
     @tasks.loop(minutes=25)
     async def post_gcount(self):
@@ -33,7 +90,7 @@ class Tasks(commands.Cog):
                 print("[INFO][Task] Request to DBL failed: {}".format(e))
 
     @post_gcount.before_loop
-    async def before_printer(self):
+    async def before_post_gcount(self):
         print('[INFO][Task] Waiting to send guildcount to DBL...')
         await self.bot.wait_until_ready()
 
