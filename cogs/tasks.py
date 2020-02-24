@@ -1,5 +1,7 @@
 from discord.ext import tasks, commands
 import aiohttp
+from discord import Game
+import random
 
 
 class Tasks(commands.Cog):
@@ -8,10 +10,12 @@ class Tasks(commands.Cog):
         self.bot.webhook_url = self.bot.consts["dbl_webhook"]
         self.post_gcount.start()
         self.reward_votes.start()
+        self.bot_activity.start()
 
     def cog_unload(self):
         self.post_gcount.cancel()
         self.reward_votes.cancel()
+        self.bot_activity.cancel()
 
     async def send_whook(self, u_name, multi):
         url = self.bot.webhook_url
@@ -37,6 +41,26 @@ class Tasks(commands.Cog):
         }
         async with aiohttp.ClientSession() as session:
             await session.post(url, json=obj)
+
+    @tasks.loop(minutes=5)
+    async def bot_activity(self):
+        # todo dynamic approach
+        """Changes bot's activity."""
+        games = ["ama help", "getting votes on DBL", "https://amathy.moe", "with Magu and Hrozvitnir", "quality music", "catching pokemon with Andrew"]
+        old_game = self.bot.guilds[0].get_member(self.bot.user.id).activity
+        old_game_name = ""
+        if old_game:
+            old_game_name = old_game.name
+        new_game_name = random.choice(games)
+        while new_game_name == old_game_name:
+            new_game_name = random.choice(games)
+        print(new_game_name)
+        game = Game(name=new_game_name)
+        await self.bot.change_presence(activity=game)
+
+    @bot_activity.before_loop
+    async def before_reward_votes(self):
+        await self.bot.wait_until_ready()
 
     @tasks.loop(minutes=1)
     async def reward_votes(self):

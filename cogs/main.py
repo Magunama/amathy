@@ -622,9 +622,9 @@ class Main(commands.Cog):
             await ctx.send("Your chosen message is too long! (800 characters)")
 
     @commands.command(aliases=["sys"])
+    @commands.cooldown(1, 8, BucketType.user)
     async def system(self, ctx):
         """Info|Shows system resources.|"""
-        # todo: add cooldown
         fields = []
 
         # System information

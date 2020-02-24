@@ -39,6 +39,7 @@ class Music(commands.Cog):
             # if you want to do things differently.
 
     async def track_hook(self, event):
+        # todo: announce disconnect
         if isinstance(event, lavalink.events.QueueEndEvent):
             guild_id = int(event.player.guild_id)
             await self.connect_to(guild_id, None)
