@@ -2,6 +2,7 @@ import math
 import re
 import discord
 import lavalink
+from utils.checks import is_vip
 from discord.ext import commands
 
 url_rx = re.compile('https?:\\/\\/(?:www\\.)?.+')  # noqa: W605
@@ -18,6 +19,15 @@ class Music(commands.Cog):
             bot.add_listener(bot.lavalink.voice_update_handler, 'on_socket_response')
 
         bot.lavalink.add_event_hook(self.track_hook)
+
+    def get_player_mode(self, player):
+        shuffle = "disabled"
+        if player.shuffle:
+            shuffle = "enabled"
+        repeat = "disabled"
+        if player.repeat:
+            repeat = "enabled"
+        return f":repeat: {repeat}; :twisted_rightwards_arrows: {shuffle}."
 
     def cog_unload(self):
         self.bot.lavalink._event_hooks.clear()
@@ -102,7 +112,7 @@ class Music(commands.Cog):
             etup = "Estimated time until play: {}".format(self.funx.seconds2string(etup - curr, "en"))
         else:
             etup = ""
-
+        player_mode = self.get_player_mode(player)
         if results['loadType'] == 'PLAYLIST_LOADED':
             tracks = results['tracks']
 
@@ -110,11 +120,11 @@ class Music(commands.Cog):
                 player.add(requester=ctx.author.id, track=track)
 
             embed.title = '🎧 **Onii-chan, your playlist is enqueued!** 🎧'
-            embed.description = f'{results["playlistInfo"]["name"]} - {len(tracks)} tracks'
+            embed.description = f'{results["playlistInfo"]["name"]} - {len(tracks)} tracks\n\n  {player_mode}'
         else:
             track = results['tracks'][0]
-            embed.title = '🎧 **Onii-chan, your track is enqueued! \n{}** 🎧'.format(etup)
-            embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})'
+            embed.title = '🎧 **Onii-chan, your track is enqueued! 🎧\n{}**'.format(etup)
+            embed.description = f'[{track["info"]["title"]}]({track["info"]["uri"]})\n\n{player_mode}'
             player.add(requester=ctx.author.id, track=track)
 
         await ctx.send(embed=embed)
@@ -171,11 +181,12 @@ class Music(commands.Cog):
             duration = lavalink.utils.format_time(player.current.duration)
         requesterid = player.current.requester
         requester = self.bot.get_user(requesterid).name
-        song = f'**[{player.current.title}]({player.current.uri})**\nrequested by **{requester}**\n({position}/{duration})'
+        player_mode = self.get_player_mode(player)
+        song = f'**[{player.current.title}]({player.current.uri})**\nrequested by **{requester}**\n({position}/{duration})\n\n{player_mode}'
 
-        status = "Song is playing"
+        status = "🎧 Song is playing 🎧"
         if player.paused:
-            status = "Song is paused"
+            status = "🎧 Song is paused 🎧"
         embed = discord.Embed(color=discord.Color.blurple(),
                               title=status, description=song)
         await ctx.send(embed=embed)
@@ -199,8 +210,9 @@ class Music(commands.Cog):
             requester = self.bot.get_user(requesterid).name
             queue_list += f'`{index + 1}.` [**{track.title}**]({track.uri}) requested by **{requester}**\n'
 
-        embed = discord.Embed(colour=discord.Color.purple(),
-                              description=f'**{len(player.queue)} tracks**\n\n{queue_list}')
+        player_mode = self.get_player_mode(player)
+        embed = discord.Embed(colour=discord.Color.purple(), title=f"**{len(player.queue)} tracks**",
+                              description=f'\n\n{queue_list}\n{player_mode}')
         embed.set_footer(text=f'Viewing page {page}/{pages}')
         await ctx.send(embed=embed)
 
@@ -220,10 +232,9 @@ class Music(commands.Cog):
             await ctx.send('🎧 ⏯ **| Paused** 🎧')
 
     @commands.command(aliases=['vol'])
+    @is_vip()
     async def volume(self, ctx, volume: int = None):
         """Music|Changes the player's volume.(0-1000)|"""
-        # todo: vip check
-
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not volume:
@@ -243,10 +254,9 @@ class Music(commands.Cog):
         await ctx.send('🔀 | Shuffle ' + ('enabled' if player.shuffle else 'disabled'))
 
     @commands.command(aliases=['loop'])
+    @is_vip()
     async def repeat(self, ctx):
         """Music|Repeats the current song until the command is invoked again.|"""
-        # todo: vip check
-
         player = self.bot.lavalink.players.get(ctx.guild.id)
 
         if not player.is_playing:

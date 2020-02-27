@@ -9,7 +9,7 @@ import aiohttp
 import time
 import json
 from utils.emojis import emojis
-from utils.checks import is_creator
+from utils.checks import is_creator, is_vip
 import os
 
 
@@ -31,21 +31,31 @@ class Main(commands.Cog):
                 return f"{bytes:.2f}{unit}{suffix}"
             bytes /= factor
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.has_permissions()
     async def say(self, ctx, *, ret):
         """Fun|Repeats your input.|"""
         ret = await commands.clean_content().convert(ctx, ret)
         await ctx.send(ret)
 
-    @commands.command( aliases=[])
+    @commands.command(aliases=[])
     async def ping(self, ctx):
         """Info|Marco! Polo!|"""
         pinger = await ctx.send('__*`Pinging...`*__')
         ping = int(self.bot.latency * 1000)
         await pinger.edit(content=':ping_pong: \n **Pong!** __**` {} ms`**__'.format(ping))
 
-    @commands.command(pass_context=True)
+    @commands.command()
+    async def vote(self, ctx):
+        """Utility|Vote me, darling!~"""
+        vote_link = "https://tiny.cc/voteama"
+        emb_links_perm = ctx.channel.permissions_for(ctx.me).embed_links
+        if not emb_links_perm:
+            return await ctx.send(f"Vote me here: {vote_link}")
+        emb = Embed().make_emb("Vote link", f"Vote me and get rewards by clicking [here]({vote_link})!")
+        await ctx.send(embed=emb)
+
+    @commands.command()
     async def invite(self, ctx):
         """Utility|Invite me to your guild!"""
         emb_links_perm = ctx.channel.permissions_for(ctx.me).embed_links
@@ -79,7 +89,7 @@ class Main(commands.Cog):
         self.bot.load_extension(f"cogs.{cog_name}")
         await ctx.send(f"Reloaded {cog_name}.")
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @is_creator()
     async def rinv(self, ctx):
         """Utility|Return a random invite link.|Creator permission"""
@@ -98,7 +108,7 @@ class Main(commands.Cog):
                     inv = random.choice(r_guild_inv_list)
                     return await ctx.send(inv.url, delete_after=8.0)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.has_permissions(administrator=True)
     @commands.cooldown(3, 60, BucketType.user)
     async def purge(self, ctx, amount: int = None):
@@ -112,7 +122,7 @@ class Main(commands.Cog):
         text = "I made {} messages to disappear. Am I magic or not? :3"
         await ctx.send(text.format(amount), delete_after=3.0)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, target=None, *, reason=None):
         """Utility|Kicks a user.|Administrator permission"""
@@ -153,7 +163,7 @@ class Main(commands.Cog):
                 text = "{} got away from the kick, *for now*."
                 await ctx.send(text.format(target))
 
-    @commands.command(pass_context=True)
+    @commands.command()
     @commands.has_permissions(administrator=True)
     async def ban(self, ctx, target=None, *, reason=None):
         """Utility|Bans a user.|Administrator permission"""
@@ -620,6 +630,31 @@ class Main(commands.Cog):
             await ctx.send("I will now send the welcome message to new members, {}!".format(ctx.author.name))
         else:
             await ctx.send("Your chosen message is too long! (800 characters)")
+
+    @commands.command()
+    async def vip(self, ctx, targ=None):
+        """Info|Checks user's VIP status.|"""
+        targ = self.bot.funx.search_for_member(ctx, targ)
+        if not targ:
+            targ = ctx.message.author
+        active = "No"
+        targ_id = targ.id
+        vip_days = await self.bot.funx.get_vip_days(targ_id)
+        if vip_days > 0:
+            active = "Yes"
+        embed = discord.Embed(
+            title="VIP status check for {}".format(targ),
+            color=0x992d22,
+            description="",
+        )
+        embed.add_field(
+            name="Active",
+            value=active)
+        embed.add_field(
+            name="Days remaining",
+            value=vip_days)
+        embed.set_footer(text="[Notice] VIP days go down every day between 1 and 2 AM.")
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=["sys"])
     @commands.cooldown(1, 8, BucketType.user)

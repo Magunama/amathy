@@ -1,5 +1,6 @@
 from discord.ext import commands
 from utils.embed import Embed
+from utils.checks import is_creator
 import datetime
 import random
 import asyncio
@@ -130,7 +131,7 @@ class Economy(commands.Cog):
                 return await ctx.send(text)
         if val <= 0:
             text = "**You can't do this.**"
-            return await ctx.send(text.format(self.mc_emoji))
+            return await ctx.send(text)
         if pocket_coins < val:
             text = "**You don't have this much {} (MC).**"
             return await ctx.send(text.format(self.mc_emoji))
@@ -159,7 +160,7 @@ class Economy(commands.Cog):
                 return await ctx.send(text)
         if val <= 0:
             text = "**You can't do this.**"
-            return await ctx.send(text.format(self.mc_emoji))
+            return await ctx.send(text)
         if bank_coins < val:
             text = "**You don't have this much {} (MC) in the bank.**"
             return await ctx.send(text.format(self.mc_emoji))
@@ -196,7 +197,7 @@ class Economy(commands.Cog):
                 return await ctx.send(text)
         if val <= 0:
             text = "**You can't do this.**"
-            return await ctx.send(text.format(self.mc_emoji))
+            return await ctx.send(text)
         if user_bank < val:
             text = "**You don't have this much {} (MC) in the bank.**"
             return await ctx.send(text.format(self.mc_emoji))
@@ -230,6 +231,100 @@ class Economy(commands.Cog):
                 await ctx.send(text.format(val, self.mc_emoji, targ))
                 text = ":euro: | **Transfer notice**\nYou have received a transfer of {} {} from {}!"
                 await targ.send(text.format(val, self.mc_emoji, ctx.author))
+
+    @commands.guild_only()
+    @commands.group(aliases=["ac"])
+    @is_creator()
+    async def addcoins(self, ctx):
+        """Utility|Adds coin to user.|Creator permission."""
+        if ctx.invoked_subcommand is None:
+            emb = await self.bot.cogs["Help"].send_help(ctx.command)
+            await ctx.send(embed=emb)
+
+    @addcoins.command(name="pocket")
+    async def add_pocket(self, ctx, targ=None, val=None):
+        """Utility|Adds coins to user's pocket.|"""
+        targ = self.bot.funx.search_for_member(ctx, targ)
+        if not targ:
+            text = "**Invalid username.**"
+            return await ctx.send(text)
+        if not val:
+            text = "**You need to input a value.**"
+            return await ctx.send(text)
+        if val.isdigit():
+            val = int(val)
+        else:
+            text = "**What kind of values are you trying to input? :anger:**"
+            return await ctx.send(text)
+        old_coins = (await self.bot.funx.get_coins(targ.id))[0]
+        new_coins = old_coins + val
+        await self.bot.funx.save_pocket(ctx.author.id, new_coins)
+        await ctx.send(f"I've added {val} coins to {targ}'s pocket.")
+
+    @addcoins.command(name="bank")
+    async def add_bank(self, ctx, targ=None, val=None):
+        """Utility|Add coins to user's bank.|"""
+        targ = self.bot.funx.search_for_member(ctx, targ)
+        if not targ:
+            text = "**Invalid username.**"
+            return await ctx.send(text)
+        if not val:
+            text = "**You need to input a value.**"
+            return await ctx.send(text)
+        if val.isdigit():
+            val = int(val)
+        else:
+            text = "**What kind of values are you trying to input? :anger:**"
+            return await ctx.send(text)
+        old_coins = (await self.bot.funx.get_coins(targ.id))[1]
+        new_coins = old_coins + val
+        await self.bot.funx.save_bank(ctx.author.id, new_coins)
+        await ctx.send(f"I've added {val} coins to {targ}'s bank.")
+
+    @commands.guild_only()
+    @commands.group(aliases=["ec"])
+    @is_creator()
+    async def editcoins(self, ctx):
+        """Utility|Edits user's coins.|Creator permission."""
+        if ctx.invoked_subcommand is None:
+            emb = await self.bot.cogs["Help"].send_help(ctx.command)
+            await ctx.send(embed=emb)
+
+    @editcoins.command(name="pocket")
+    async def edit_pocket(self, ctx, targ=None, val=None):
+        """Utility|Edits user's pocket coins.|"""
+        targ = self.bot.funx.search_for_member(ctx, targ)
+        if not targ:
+            text = "**Invalid username.**"
+            return await ctx.send(text)
+        if not val:
+            text = "**You need to input a value.**"
+            return await ctx.send(text)
+        if val.isdigit():
+            val = int(val)
+        else:
+            text = "**What kind of values are you trying to input? :anger:**"
+            return await ctx.send(text)
+        await self.bot.funx.save_pocket(ctx.author.id, val)
+        await ctx.send(f"I've edited {targ}'s pocket coins to {val}.")
+
+    @editcoins.command(name="bank")
+    async def edit_bank(self, ctx, targ=None, val=None):
+        """Utility|Edits user's bank coins.|"""
+        targ = self.bot.funx.search_for_member(ctx, targ)
+        if not targ:
+            text = "**Invalid username.**"
+            return await ctx.send(text)
+        if not val:
+            text = "**You need to input a value.**"
+            return await ctx.send(text)
+        if val.isdigit():
+            val = int(val)
+        else:
+            text = "**What kind of values are you trying to input? :anger:**"
+            return await ctx.send(text)
+        await self.bot.funx.save_bank(ctx.author.id, val)
+        await ctx.send(f"I've edited {targ}'s bank coins to {val}.")
 
     @commands.guild_only()
     @commands.group()

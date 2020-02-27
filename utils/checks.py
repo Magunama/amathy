@@ -67,3 +67,14 @@ def is_nsfw():
         await ctx.send(embed=emb)
         return False
     return commands.check(inside_check)
+
+
+def is_vip():
+    async def vip_check(ctx):
+        if ctx.bot:
+            vip_days = await ctx.bot.funx.get_vip_days(ctx.author.id)
+            if vip_days > 0:
+                return True
+        await ctx.send("Sorry, only VIP users can use this command!")
+        return False
+    return commands.check(vip_check)
