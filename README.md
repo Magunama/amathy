@@ -1,6 +1,6 @@
-# Amathy-slave
+# Amathy
 
-Amathy's slave bot
+Amathy - a multifunctional Discord bot 
 
 ## Getting Started
 

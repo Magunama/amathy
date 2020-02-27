@@ -54,7 +54,6 @@ class Tasks(commands.Cog):
         new_game_name = random.choice(games)
         while new_game_name == old_game_name:
             new_game_name = random.choice(games)
-        print(new_game_name)
         game = Game(name=new_game_name)
         await self.bot.change_presence(activity=game)
 
