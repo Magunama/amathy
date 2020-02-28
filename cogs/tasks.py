@@ -2,20 +2,25 @@ from discord.ext import tasks, commands
 import aiohttp
 from discord import Game
 import random
+import datetime
+import asyncio
 
 
 class Tasks(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.utc_diff = bot.consts["utc_diff"]
         self.bot.webhook_url = self.bot.consts["dbl_webhook"]
         self.post_gcount.start()
         self.reward_votes.start()
         self.bot_activity.start()
+        self.vip_days.start()
 
     def cog_unload(self):
         self.post_gcount.cancel()
         self.reward_votes.cancel()
         self.bot_activity.cancel()
+        self.vip_days.cancel()
 
     async def send_whook(self, u_name, multi):
         url = self.bot.webhook_url
@@ -41,6 +46,25 @@ class Tasks(commands.Cog):
         }
         async with aiohttp.ClientSession() as session:
             await session.post(url, json=obj)
+
+    def get_vip_interval(self):
+        time_utc = datetime.datetime.utcnow()
+        time_now = time_utc + datetime.timedelta(hours=self.utc_diff)
+        time_next = time_now + datetime.timedelta(days=1) #interval
+        time_next = time_next.replace(hour=0, minute=0, second=0)
+        return time_next - time_now
+
+    @tasks.loop(hours=24)
+    async def vip_days(self):
+        """Vip_days must go down, right?"""
+        script = "update amathy.stats set vip_days=stats.vip_days-1 where vip_days > 0"
+        await self.bot.funx.execute(script)
+        print("[INFO][Task] VIP days just went down!")
+
+    @vip_days.before_loop
+    async def before_vip_days(self):
+        interval = self.get_vip_interval()
+        await asyncio.sleep(interval.total_seconds())
 
     @tasks.loop(minutes=5)
     async def bot_activity(self):

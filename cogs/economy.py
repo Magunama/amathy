@@ -344,7 +344,7 @@ class Economy(commands.Cog):
             user_id, pocket, bank = elem
             top[int(user_id)] = pocket + bank
         sorted_top = sorted(top, key=top.get, reverse=True)
-        emb = Embed().make_emb("Global top - MC", "To get coins, use `a daily` or vote me ([here](https://tiny.cc/voteama)).")
+        emb = Embed().make_emb("Global top - MC", "To get coins, use `a daily` or vote for me ([here](https://tiny.cc/voteama)).")
         max_range = 10
         if len(sorted_top) < max_range:
             max_range = len(sorted_top)
@@ -369,7 +369,7 @@ class Economy(commands.Cog):
             user_id, xp = elem
             top[int(user_id)] = xp
         sorted_top = sorted(top, key=top.get, reverse=True)
-        emb = Embed().make_emb("Global top - XP", "To get xp, use commands or vote me ([here](https://tiny.cc/voteama)).")
+        emb = Embed().make_emb("Global top - XP", "To get xp, use commands or vote for me ([here](https://tiny.cc/voteama)).")
         max_range = 10
         if len(sorted_top) < max_range:
             max_range = len(sorted_top)
@@ -394,7 +394,7 @@ class Economy(commands.Cog):
             user_id, votes = elem
             top[int(user_id)] = votes
         sorted_top = sorted(top, key=top.get, reverse=True)
-        emb = Embed().make_emb("Global top - XP", "To get here, vote me ([here](https://tiny.cc/voteama)).")
+        emb = Embed().make_emb("Global top - XP", "To get here, vote for me ([here](https://tiny.cc/voteama)).")
         max_range = 10
         if len(sorted_top) < max_range:
             max_range = len(sorted_top)

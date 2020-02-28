@@ -47,17 +47,17 @@ class Main(commands.Cog):
 
     @commands.command()
     async def vote(self, ctx):
-        """Utility|Vote me, darling!~"""
+        """Utility|Vote for me, darling!~|"""
         vote_link = "https://tiny.cc/voteama"
         emb_links_perm = ctx.channel.permissions_for(ctx.me).embed_links
         if not emb_links_perm:
-            return await ctx.send(f"Vote me here: {vote_link}")
-        emb = Embed().make_emb("Vote link", f"Vote me and get rewards by clicking [here]({vote_link})!")
+            return await ctx.send(f"Vote for me here: {vote_link}")
+        emb = Embed().make_emb("Vote link", f"Vote for me and get rewards by clicking [here]({vote_link})!")
         await ctx.send(embed=emb)
 
     @commands.command()
     async def invite(self, ctx):
-        """Utility|Invite me to your guild!"""
+        """Utility|Invite me to your guild!|"""
         emb_links_perm = ctx.channel.permissions_for(ctx.me).embed_links
         if not emb_links_perm:
             return await ctx.send(self.bot.invite_link)
@@ -323,7 +323,7 @@ class Main(commands.Cog):
         supp_server = "https://discord.gg/D87ykxd"
         vote = "https://discordbots.org/bot/410488336344547338/vote"
         invite = self.bot.invite_link
-        links = f"\n[Website!]({website}) ✤ [Support server!]({supp_server}) ✤ [Vote me & get rewards!]({vote}) ✤ [Invite me!]({invite})\n"
+        links = f"\n[Website!]({website}) ✤ [Support server!]({supp_server}) ✤ [Vote for me & get rewards!]({vote}) ✤ [Invite me!]({invite})\n"
         embed.add_field(name="Links", value=links, inline=True)
         embed.set_footer(text="© 2018-2020 - Copyright: AnimeVibe - Project Amathy")
         await ctx.send(embed=embed)
