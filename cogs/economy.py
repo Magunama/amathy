@@ -29,9 +29,9 @@ class Economy(commands.Cog):
             after_coins = prev_coins + pick
             await self.bot.funx.save_pocket(ctx.author.id, after_coins)
             await self.bot.funx.save_timer(ctx.author.id, "daily", time_now)
-            text = ["**:moneybag: | You have received {0} {3}, {1}. I see you're kinda lucky. :) You now have {2} {3}.**",
-                    "**:moneybag: | You have received {0} {3}, {1}. How'd you do that? :) You now have {2} {3}.**",
-                    "**:moneybag: | You have received {0} {3}, {1}. Have you eaten something special today? :) You now have {2} {3}.**"]
+            text = ["**:moneybag: | You have received {0} {3}, {1}. I see you're kinda lucky. :) You now have {2} {3} in your pocket.**",
+                    "**:moneybag: | You have received {0} {3}, {1}. How'd you do that? :) You now have {2} {3} in your pocket.**",
+                    "**:moneybag: | You have received {0} {3}, {1}. Have you eaten something special today? :) You now have {2} {3} in your pocket.**"]
             text = random.choice(text)
             await ctx.send(text.format(pick, ctx.author.mention, after_coins, self.mc_emoji))
         else:
@@ -394,7 +394,7 @@ class Economy(commands.Cog):
             user_id, votes = elem
             top[int(user_id)] = votes
         sorted_top = sorted(top, key=top.get, reverse=True)
-        emb = Embed().make_emb("Global top - XP", "To get here, vote for me ([here](https://tiny.cc/voteama)).")
+        emb = Embed().make_emb("Global top - Votes", "To get listed, vote for me ([here](https://tiny.cc/voteama)).")
         max_range = 10
         if len(sorted_top) < max_range:
             max_range = len(sorted_top)

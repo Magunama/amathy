@@ -53,6 +53,11 @@ async def on_shard_ready(shard):
 
 
 @bot.event
+async def on_message(message):
+    await bot.process_commands(message)
+
+
+@bot.event
 async def on_raw_reaction_add(payload):
     # todo: optimization
     m_id = payload.message_id
