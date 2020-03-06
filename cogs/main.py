@@ -653,7 +653,7 @@ class Main(commands.Cog):
         embed.add_field(
             name="Days remaining",
             value=vip_days)
-        embed.set_footer(text="[Notice] VIP days go down every day between 1 and 2 AM.")
+        embed.set_footer(text="[Notice] VIP days go down every day between 0 and 1 AM.")
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["sys"])

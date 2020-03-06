@@ -3,7 +3,6 @@ from discord.ext import commands
 import itertools
 import os
 import json
-import datetime
 
 
 def get_prefix(bot, message):

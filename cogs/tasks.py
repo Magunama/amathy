@@ -88,6 +88,7 @@ class Tasks(commands.Cog):
     @tasks.loop(minutes=1)
     async def reward_votes(self):
         """Reward users who voted the bot!"""
+        # todo: connect queries
         script = "select user_id, last_vote, rewards from amathy.votes where rewards>0;"
         data = await self.bot.funx.fetch_many(script)
         for elem in data:
