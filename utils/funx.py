@@ -97,17 +97,17 @@ class Funx:
     def seconds2string(self, seconds, lang="en"):
         return self.delta2string(datetime.timedelta(seconds=seconds), lang)
 
-    async def fetch_one(self, query):
-        return await self.bot.pool.fetchrow(query)
+    async def fetch_one(self, query, *args):
+        return await self.bot.pool.fetchrow(query, *args)
 
-    async def fetch_many(self, query):
-        return await self.bot.pool.fetch(query)
+    async def fetch_many(self, query, *args):
+        return await self.bot.pool.fetch(query, *args)
 
-    async def execute(self, query):
+    async def execute(self, query, *args):
         # print("Total Connections: {0.size} Free Connections: {0.freesize} Script: {1}".format(self.bot.pool, sql))
         connection = await self.bot.pool.acquire()
         async with connection.transaction():
-            await self.bot.pool.execute(query)
+            await self.bot.pool.execute(query, *args)
         await self.bot.pool.release(connection)
 
     async def get_coins(self, user_id):

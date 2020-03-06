@@ -1,9 +1,9 @@
 from discord.ext import commands
+from utils.embed import Embed
 import datetime
 import asyncpg
 import random
 import asyncio
-import json
 
 
 class Definitions(commands.Cog):
@@ -22,16 +22,16 @@ class Definitions(commands.Cog):
         return False, "cannot be deleted by you."
 
     async def get_short_def(self, def_name, guild_id):
-        script = f"select def_body from amathy.definitions where def_name='{def_name}' and (def_global=true or def_guild_id={guild_id})"
-        data = await self.bot.funx.fetch_one(script)
+        script = f"select def_body from amathy.definitions where def_name=($1) and (def_global=true or def_guild_id={guild_id})"
+        data = await self.bot.funx.fetch_one(script, def_name)
         if not data:
             return None
         data = data["def_body"]
         return f":bookmark: | {data}"
 
     async def get_long_def(self, def_name):
-        script = f"select def_body, def_guild_id, def_author_id, def_time, def_global from amathy.definitions where def_name='{def_name}'"
-        data = await self.bot.funx.fetch_one(script)
+        script = f"select def_body, def_guild_id, def_author_id, def_time, def_global from amathy.definitions where def_name=($1)"
+        data = await self.bot.funx.fetch_one(script, def_name)
         if not data:
             return None
         return data
@@ -48,24 +48,49 @@ class Definitions(commands.Cog):
             author_obj = def_author_id
         return f"**[DEF]**: `{def_name}` was defined as `{def_body}` by {author_obj} on {def_time}. :smile:"
 
+    async def get_defs_by_author(self, def_author):
+        def_author_id = def_author.id
+        script = f"select def_name, def_global from amathy.definitions where def_author_id={def_author_id}"
+        data = await self.bot.funx.fetch_many(script)
+        if not data:
+            return None
+        showlen = len(data)
+        if showlen % 10 == 0:
+            lastpage = int(showlen / 10)
+        else:
+            lastpage = int(showlen / 10) + 1
+        embeds = list()
+        title = f"{def_author.name}'s list of definitions [{showlen}]"
+        desc = f"Here are {def_author.name}'s definitions:"
+        for i in range(1, lastpage + 1):
+            fields = []
+            for j in range((i - 1) * 10, (i * 10) - 1):
+                if not j < showlen:
+                    break
+                def_status = "• local"
+                if data[j]["def_global"]:
+                    def_status = "• global"
+                fields.append([data[j]["def_name"], def_status, True])
+            footer = "{}/{} - To see a definition, use ama define [definition].".format(i, lastpage)
+            embed = Embed().make_emb(title, desc, None, fields, footer)
+            embeds.append(embed)
+        return embeds
+
     async def save_def(self, def_name, def_body, def_guild_id, def_author_id, def_global):
-        # todo: parse
         time_utc = datetime.datetime.utcnow()
         time_now = time_utc + datetime.timedelta(hours=self.utc_diff)
         def_time = time_now.strftime(self.date_format)
-        # def_name = json.dumps(def_name)
-        # def_body = json.dumps(def_body)
-        script = f"insert into amathy.definitions values (default, '{def_name}', '{def_body}', {def_guild_id}, {def_author_id}, '{def_time}', {def_global})"
+        script = f"insert into amathy.definitions values (default, ($1), ($2), {def_guild_id}, {def_author_id}, '{def_time}', {def_global})"
         try:
-            await self.bot.funx.execute(script)
+            await self.bot.funx.execute(script, def_name, def_body)
         except asyncpg.exceptions.UniqueViolationError:
             return f"Sorry, definition `{def_name}` already exists!"
         return f"Saved definition `{def_name}`."
 
     async def delete_def(self, def_name):
-        script = f"delete from amathy.definitions where def_name='{def_name}'"
+        script = f"delete from amathy.definitions where def_name=($1)"
         try:
-            await self.bot.funx.execute(script)
+            await self.bot.funx.execute(script, def_name)
         except Exception as e:
             print(e)
         return f"Deleted `{def_name}`."
@@ -181,6 +206,21 @@ class Definitions(commands.Cog):
                 else:
                     ret = "Invalid confirmation! Try again?"
                 await ctx.send(ret)
+
+    @commands.command(aliases=["dlist"])
+    async def deflist(self, ctx, targ=None):
+        """Fun|Read someone's definitions.|"""
+        if not targ:
+            text = "**You need to enter a (partial) username or an id.**"
+            return await ctx.send(text)
+        targ = self.bot.funx.search_for_member(ctx, targ)
+        if not targ:
+            text = "**Invalid username or id.**"
+            return await ctx.send(text)
+        embeds = await self.get_defs_by_author(targ)
+        if not embeds:
+            await ctx.send(f"No definitions found for user {targ.name}.")
+        await self.bot.funx.embed_menu(ctx, embeds)
 
     @commands.command(aliases=["rdef"])
     async def randef(self, ctx):
