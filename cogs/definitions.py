@@ -110,9 +110,10 @@ class Definitions(commands.Cog):
         mesc = message.content.lower()
         if 0 < len(mesc) <= 20:
             chan = message.channel
-            def_found = await self.get_short_def(mesc, message.guild.id)
-            if def_found:
-                await chan.send(def_found)
+            if hasattr(chan, "guild"):
+                def_found = await self.get_short_def(mesc, chan.guild.id)
+                if def_found:
+                    await chan.send(def_found)
 
     @commands.command(aliases=["def"])
     async def define(self, ctx, def_name=None):
@@ -120,6 +121,7 @@ class Definitions(commands.Cog):
         if not def_name:
             text = "You must enter the name of a definition!"
             return await ctx.send(text)
+        def_name = def_name.lower()
         def_found = await self.get_long_def(def_name)
         if def_found:
             def_text = await self.get_formatted_def(def_name, def_found)
@@ -138,6 +140,7 @@ class Definitions(commands.Cog):
         if not "::" in def_string:
             return await ctx.send(text)
         def_name, def_body = def_string.split("::")
+        def_name = def_name.lower()
         if not 0 < len(def_name) <= 20:
             text = "The definition name must have between 1 and 20 characters!"
             return await ctx.send(text)
@@ -179,6 +182,7 @@ class Definitions(commands.Cog):
             text = "The definition name must have between 1 and 20 characters!"
             return await ctx.send(text)
 
+        def_name = def_name.lower()
         def_found = await self.get_long_def(def_name)
         if not def_found:
             text = f"No definition found for `{def_name}`."

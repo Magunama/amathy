@@ -10,6 +10,7 @@ class Tasks(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.utc_diff = bot.consts["utc_diff"]
+        self.base_coins, self.base_xp = 150, 50
         self.bot.webhook_url = self.bot.consts["dbl_webhook"]
         self.post_gcount.start()
         self.reward_votes.start()
@@ -28,7 +29,7 @@ class Tasks(commands.Cog):
         votestr = "\nTo vote, click [here](https://top.gg/bot/410488336344547338/vote)."
         if multi > 1:
             pic = "https://i.imgur.com/LjRefpO.png"
-        desc = "This vote gave them {} coins and {} xp.{}".format(300*multi, 100*multi, votestr)
+        desc = "This vote gave them {} coins and {} xp.{}".format(self.base_coins*multi, self.base_xp*multi, votestr)
         title = "{} just voted!".format(u_name)
         obj = {
             "embeds": [
@@ -93,8 +94,8 @@ class Tasks(commands.Cog):
         data = await self.bot.funx.fetch_many(script)
         for elem in data:
             user_id, last_vote, rewards = elem
-            coins = 300 * rewards
-            xp = 100 * rewards
+            coins = self.base_coins * rewards
+            xp = self.base_xp * rewards
             script = "update amathy.votes set rewards=0 where user_id='{0}';".format(user_id)
             await self.bot.funx.execute(script)
             script = "insert into amathy.coins (user_id, bank) values ({0}, {1}) on conflict (user_id) do update set bank=coins.bank+{1};"

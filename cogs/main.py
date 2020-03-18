@@ -9,7 +9,7 @@ import aiohttp
 import time
 import json
 from utils.emojis import emojis
-from utils.checks import is_creator, is_vip
+from utils.checks import is_creator
 import os
 
 
@@ -203,68 +203,6 @@ class Main(commands.Cog):
             else:
                 text = "{} got away from the ban, *for now*."
                 await ctx.send(text.format(target))
-
-    @commands.group(aliases=["guild"])
-    @commands.guild_only()
-    async def server(self, ctx):
-        """Utility|Shows server info/settings.|"""
-        if ctx.invoked_subcommand is None:
-            emb = await self.bot.cogs["Help"].send_help(ctx.command)
-            await ctx.send(embed=emb)
-
-    @server.command(name="info")
-    async def s_info(self, ctx):
-        """Info|Returns some server information.|"""
-        embed = discord.Embed(title="Guild details:")
-        embed.set_author(name="{} ({})".format(ctx.guild.name, ctx.guild.id))
-        embed.set_thumbnail(url=ctx.guild.icon_url)
-        embed.add_field(name="Owner", value=ctx.guild.owner, inline=True)
-        embed.add_field(name="Region", value=ctx.guild.region, inline=True)
-        embed.add_field(name="Created at", value=str(ctx.guild.created_at).split('.', 1)[0], inline=True)
-        members = 0
-        bots = 0
-        online_members = 0
-        for k in ctx.guild.members:
-            if k.bot:
-                bots += 1
-            else:
-                members += 1
-                if str(k.status) in ["online", "dnd"]:
-                    online_members += 1
-        embed.add_field(name="Members", value=members, inline=True)
-        embed.add_field(name="Bots", value=bots, inline=True)
-        embed.add_field(name="Online members", value=online_members, inline=True)
-        embed.add_field(name="Text channels", value=len(ctx.guild.text_channels), inline=True)
-        embed.add_field(name="Voice channels", value=len(ctx.guild.voice_channels), inline=True)
-        embed.add_field(name="Nitro boost level", value=ctx.guild.premium_tier, inline=True)
-        embed.add_field(name="Members boosting this guild", value=ctx.guild.premium_subscription_count, inline=True)
-        g_boost_stats = "```Emoji limit: {} emojis\nBitrate limit: {} kbps\nFilesize limit: {} MB```".format(ctx.guild.emoji_limit,
-                                                                                                             int(ctx.guild.bitrate_limit / 1000),
-                                                                                                             int(ctx.guild.filesize_limit / 1048576))
-        embed.add_field(name="Guild boost stats", value=g_boost_stats, inline=True)
-        emoji_list = await ctx.guild.fetch_emojis()
-        random.shuffle(emoji_list)
-        emoji_string = ""
-        maxlen = len(emoji_list)
-        if maxlen > 20:
-            maxlen = 20
-        for i in range(0, maxlen):
-            emoji_string += str(emoji_list[i])
-        if len(emoji_string) > 0:
-            embed.add_field(name="Some emojis", value=emoji_string, inline=True)
-        await ctx.send(embed=embed)
-
-    @server.command(aliases=["roles"])
-    async def roleids(self, ctx):
-        """Utility|Returns a list of roles in the guild.|"""
-        lista = ctx.message.guild.roles
-        string = list()
-        for k in lista:
-            idu, nama = k.id, k.name
-            if nama == "@everyone":
-                nama = "everyone"
-            string.append("{} - {}".format(nama, idu))
-        await ctx.send("\n".join(string))
 
     @commands.group()
     @commands.guild_only()
@@ -561,75 +499,6 @@ class Main(commands.Cog):
                 await self.bot.funx.embed_menu(ctx, emb_list=embeds)
             else:
                 await ctx.send("The list of ReactRoles is empty. Add one with `a rr add`.")
-
-    @commands.group()
-    @commands.has_permissions(administrator=True)
-    async def welcome(self, ctx):
-        """Utility|Welcome Role/Message|Administrator permission."""
-        # todo: optimization + change path?
-        if ctx.invoked_subcommand is None:
-            u = ctx.message.author
-            text = "Available actions:\n`a welcome role` to change the welcome role;\n`a welcome msg` to change the welcome message."
-            await ctx.send(text)
-
-    @welcome.command()
-    async def role(self, ctx, roleid=None):
-        """Utility|Set a welcome role.|"""
-        autoroles, joinmsgs = self.bot.funx.autoroles, self.bot.funx.joinmsgs
-        serv_str = str(ctx.guild.id)
-        autorole = "N/A"
-        if serv_str in autoroles:
-            autorole = ctx.guild.get_role(int(autoroles[serv_str]))
-        if not roleid:
-            rettext = "The current active welcome role: `{}` \nTo change the role, use `a welcome role [id]`. To disable the welcome role event, use `a welcome role disable`.\nTo find easier the role id, use `a server roles`."
-            return await ctx.send(rettext.format(autorole))
-        if roleid == "disable":
-            if serv_str in autoroles:
-                del autoroles[serv_str]
-                with open('data/autorole/autorole.json', 'w') as fp:
-                    json.dump(autoroles, fp, indent=4)
-                return await ctx.send("I won't give the role `{}` to new members anymore.".format(autorole))
-            else:
-                return await ctx.send("There isn't any active welcome role.")
-        if len(roleid) == 18 and roleid.isdigit():
-            chk = ctx.guild.get_role(int(roleid))
-            if chk:
-                if not chk == "@everyone":
-                    autoroles[serv_str] = roleid
-                    with open('data/autorole/autorole.json', 'w') as fp:
-                        json.dump(autoroles, fp, indent=4)
-                    await ctx.send("I will now give the role `{}` to new members, {}!".format(chk, ctx.author.name))
-            else:
-                await ctx.send("Something went wrong! Are you sure you gave me a valid id?")
-        else:
-            await ctx.send("Something went wrong! Are you sure you gave me a valid id?")
-
-    @welcome.command()
-    async def msg(self, ctx, msg=None):
-        """Utility|Set a welcome message.|"""
-        autoroles, joinmsgs = self.bot.funx.autoroles, self.bot.funx.joinmsgs
-        serv_str = str(ctx.guild.id)
-        joinmsg = "N/A"
-        if serv_str in joinmsgs:
-            joinmsg = joinmsgs[serv_str]
-        if not msg:
-            rettext = "The active welcome message: `{}` \nTo change it, use `a welcome msg [text]`. To disable the sending of the message, use `a welcome msg disable`."
-            return await ctx.send(rettext.format(joinmsg))
-        if msg == "disable":
-            if serv_str in joinmsgs:
-                del joinmsgs[serv_str]
-                with open('data/autorole/joinmsgs.json', 'w') as fp:
-                    json.dump(joinmsgs, fp, indent=4)
-                await ctx.send("I won't send a welcome message to new members anymore.")
-            else:
-                await ctx.send("There isn't any active welcome message!")
-        if len(msg) <= 800:
-            joinmsgs[serv_str] = msg
-            with open('data/autorole/joinmsgs.json', 'w') as fp:
-                json.dump(joinmsgs, fp, indent=4)
-            await ctx.send("I will now send the welcome message to new members, {}!".format(ctx.author.name))
-        else:
-            await ctx.send("Your chosen message is too long! (800 characters)")
 
     @commands.command()
     async def vip(self, ctx, targ=None):

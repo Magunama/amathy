@@ -131,22 +131,7 @@ async def on_guild_remove(guild):
 
 @bot.event
 async def on_member_join(member):
-    # todo: optimization
-    await bot.wait_until_ready()
-    if member.bot:
-        return
-    autoroles, joinmsgs = bot.funx.autoroles, bot.funx.joinmsgs
-    serv_obj = member.guild
-    serv_str = str(serv_obj.id)
-    if serv_str in autoroles:
-        roleobj = serv_obj.get_role(int(autoroles[serv_str]))
-        basictext = "[EN] Welcome to **{0}**! You were given the following role: `{1}`".format(serv_obj.name, roleobj.name)
-        await member.add_roles(roleobj)
-        await member.send(basictext)
-    if serv_str in joinmsgs:
-        msg = joinmsgs[serv_str]
-        basictext = "[EN] A welcome message has been set for you: \n{}".format(msg)
-        member.send(basictext)
+    pass
 
 
 @bot.event
@@ -156,17 +141,4 @@ async def on_member_leave(member):
 
 @bot.event
 async def on_member_update(before, after):
-    # todo: optimization
-    await bot.wait_until_ready()
-    if after.bot:
-        return
-    autoroles, joinmsgs = bot.funx.autoroles, bot.funx.joinmsgs
-    serv_obj = after.guild
-    serv_str = str(serv_obj.id)
-    if serv_str in autoroles:
-        roleobj = serv_obj.get_role(int(autoroles[serv_str]))
-        if not roleobj in before.roles:
-            try:
-                await after.add_roles(roleobj)
-            except discord.errors.Forbidden:
-                pass
+    pass

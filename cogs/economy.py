@@ -25,7 +25,7 @@ class Economy(commands.Cog):
         time_now = time_utc + datetime.timedelta(hours=self.utc_diff)
         if time_now >= expected_time:
             # todo: add xp multiplier
-            pick = random.randint(50, 200)
+            pick = random.randint(25, 100)
             after_coins = prev_coins + pick
             await self.bot.funx.save_pocket(ctx.author.id, after_coins)
             await self.bot.funx.save_timer(ctx.author.id, "daily", time_now)

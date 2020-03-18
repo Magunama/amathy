@@ -1,8 +1,6 @@
 import datetime
 import discord
 import time
-import json
-from utils.checks import check_file, check_create_file, check_create_folder
 
 
 class Funx:
@@ -10,19 +8,6 @@ class Funx:
         self.bot = bot
         self.date_format = bot.consts["date_format"]
 
-    # todo: better file management
-    # AUTOROLE MENU
-    check_create_folder("data/autorole/")
-    check_create_file("data/autorole/autorole.json", "{}")
-    check_create_file("data/autorole/joinmsgs.json", "{}")
-    # Welcome role
-    with open('data/autorole/autorole.json', 'r') as fp:
-        autoroles = json.load(fp)
-    # Welcome msg
-    with open('data/autorole/joinmsgs.json', 'r') as fp:
-        joinmsgs = json.load(fp)
-    print("[INFO]: Autoroles, joinmsgs fully loaded.")
-    #############
     launch_time = time.time()
 
     @staticmethod
