@@ -94,7 +94,6 @@ async def on_raw_reaction_add(payload):
 
 @bot.event
 async def on_guild_join(guild):
-    # todo: optimization
     # time_utc = datetime.datetime.utcnow()
     # utc_diff = 3  # Ro = utc +3
     # time_result = time_utc + datetime.timedelta(hours=utc_diff)

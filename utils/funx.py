@@ -1,6 +1,7 @@
 import datetime
 import discord
 import time
+import json
 
 
 class Funx:
@@ -96,12 +97,19 @@ class Funx:
         await self.bot.pool.release(connection)
 
     async def get_coins(self, user_id):
-        # todo: limit, change varchar to numeric
+        # todo: limit
         script = f"select pocket, bank from amathy.coins where user_id={user_id}"
         data = await self.bot.funx.fetch_one(script)
         if not data:
             return 0, 0
         return data
+
+    async def get_gems(self, user_id):
+        script = f"select gems from amathy.stats where user_id={user_id}"
+        data = await self.bot.funx.fetch_one(script)
+        if not data:
+            return 0
+        return data["gems"]
 
     async def get_stats(self, user_id):
         script = f"select xp, gems, vip_days from amathy.stats where user_id={user_id}"
@@ -131,6 +139,46 @@ class Funx:
             return datetime.datetime(1, 1, 1)
         return data[cat]
 
+    async def get_inventory(self, user_id):
+        script = f"select inventory from amathy.stats where user_id={user_id}"
+        data = await self.bot.funx.fetch_one(script)
+        if not data:
+            return {}
+        return json.loads(data["inventory"])
+
+    # async def get_inv_item_count(self, user_id, item_name):
+    #     script = f"select inventory -> '{item_name}' from amathy.stats where user_id={user_id}"
+    #     data = await self.bot.funx.fetch_one(script)
+    #     if not data:
+    #         return 0
+    #     return data
+
+    @staticmethod
+    def inventory_add(inventory, item_name, quantity=1):
+        if item_name not in inventory:
+            inventory[item_name] = 0
+        num = inventory[item_name] + quantity
+        inventory[item_name] = num
+        return inventory
+
+    @staticmethod
+    def inventory_rem(inventory, item_name, quantity=1):
+        num = 0
+        if item_name in inventory:
+            num = inventory[item_name]
+        if num > 0:
+            del inventory[item_name]
+            if quantity == "all":
+                quantity = num
+            if num > quantity:
+                inventory[item_name] = num - quantity
+        return inventory
+
+    async def save_inventory(self, user_id, inv):
+        inv = json.dumps(inv)
+        script = f"insert into amathy.stats (user_id, inventory) values ({user_id}, '{inv}') on conflict (user_id) do update set inventory='{inv}'"
+        await self.execute(script)
+
     async def save_pocket(self, uid, val):
         # urank = await self.get_rank(uid)
         # if 3 <= urank <= 6:
@@ -147,6 +195,10 @@ class Funx:
 
     async def save_bank(self, uid, val):
         script = f"insert into amathy.coins (user_id, bank) values ({uid}, {val}) on conflict (user_id) do update set bank={val}"
+        await self.execute(script)
+
+    async def save_gems(self, uid, val):
+        script = f"insert into amathy.stats (user_id, gems) values ({uid}, {val}) on conflict (user_id) do update set gems={val}"
         await self.execute(script)
 
     async def save_timer(self, uid, cat, val):

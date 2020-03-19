@@ -12,6 +12,61 @@ class Economy(commands.Cog):
         self.bot = bot
         self.utc_diff = bot.consts["utc_diff"]
         self.mc_emoji = bot.get_emoji(bot.consts["mc_emoji_id"])
+        self.shop = [{"name": ["chest", "chests"], "price": 1200, "currency": "coins"},
+                     {"name": ["die", "dice"], "price": 80, "currency": "coins"}]
+
+    @staticmethod
+    def can_buy(have, need):
+        if need <= have:
+            return True
+        return False
+
+    async def buy_item(self, ctx, item, quantity):
+        # todo: item limit
+        if not quantity.isdigit():
+            return await ctx.send("Wrong quantity provided! Usage: `a buy [item] [quantity]`.")
+        quantity = int(quantity)
+        user_id = ctx.author.id
+        name = item["name"][0]
+        price = item["price"] * quantity
+        curr = item["currency"]
+        if curr == "coins":
+            bal = (await self.bot.funx.get_coins(user_id))[0]
+        else:
+            bal = (await self.bot.funx.get_gems(user_id)[0])
+        if not self.can_buy(bal, price):
+            return await ctx.send(f"Not enough {curr}! You need **{price} {curr}** to buy **{quantity} x {name}**!")
+
+        def check(reaction, user):
+            return user.id == ctx.author.id and str(reaction.emoji) in ["✅", "❎"]
+
+        buy_prompt = f"Do you want to buy {quantity} x **{name}**, {ctx.author.mention}? It will cost you **{price}** {curr}!"
+        resp = await ctx.send(buy_prompt)
+        await resp.add_reaction("✅")
+        await resp.add_reaction("❎")
+        try:
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=10, check=check)
+        except discord.errors.Forbidden:
+            await ctx.send("I need permission to add reactions!")
+        except asyncio.TimeoutError:
+            await ctx.send("You have not replied. I should tax you 1 MC because you made me lose time for nothing.")
+
+        except Exception as e:
+            print(e)
+        else:
+            await resp.delete()
+            if str(reaction) == "❎":
+                await ctx.send("It seems like you don't want this item. Why though? Is it dirty?")
+            elif str(reaction) == "✅":
+                bal -= price
+                if curr == "coins":
+                    await self.bot.funx.save_pocket(user_id, bal)
+                else:
+                    await self.bot.funx.save_gems(user_id, bal)
+                inv = await self.bot.funx.get_inventory(user_id)
+                inv = self.bot.funx.inventory_add(inv, name, quantity)
+                await self.bot.funx.save_inventory(user_id, inv)
+                await ctx.send(f"You have bought **{quantity} x {name}**! Enjoy!")
 
     @commands.guild_only()
     @commands.command(aliases=["dailymc"])
@@ -408,6 +463,60 @@ class Economy(commands.Cog):
             if user:
                 emb.add_field(name="No. {}: {}".format(index + 1, user.name), value="{} votes".format(votes))
         await ctx.send(embed=emb)
+
+    @commands.command()
+    @commands.guild_only()
+    async def buy(self, ctx, item, quantity="1"):
+        if not item:
+            pass
+        item = item.lower()
+        found = None
+        for it in self.shop:
+            if item in it["name"]:
+                found = it
+                break
+        if not found:
+            return await ctx.send(f"The item {item} can't be found in the shop. :confused: Maybe you missed something?")
+        await self.buy_item(ctx, found, quantity)
+
+    @commands.command(aliases=["bag"])
+    async def inventory(self, ctx, targ=None):
+        targ = self.bot.funx.search_for_member(ctx, targ)
+        if not targ:
+            targ = ctx.message.author
+        inventory = await self.bot.funx.get_inventory(targ.id)
+        if targ == ctx.author:
+            embed = Embed().make_emb("[Inventory]", "These are **your** items:")
+        else:
+            embed = Embed().make_emb("[Inventory]", f"These are **{targ}**'s items:")
+
+        for item in inventory:
+            quantity = f"{inventory[item]} units"
+            embed.add_field(name=item.capitalize(), value=quantity, inline=True)
+        # embed.set_footer("Page 1/1 - To find out more about an item, use ama iteminfo <item_name>.")
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def shop(self, ctx):
+        emb_links_perm = ctx.channel.permissions_for(ctx.me).embed_links
+        if not emb_links_perm:
+            return await ctx.send("I need the `embed_links` permission to show you the shop.")
+        # xpu = await funx.get_xp(u.id)
+        # lv = funx.get_lvl(xpu)
+        page_1 = Embed().make_emb(title="[Coin Shop] >>> Amathy sells:", desc="The following can be bought with coins.", footer="Page 1/2 - To buy something, type a buy [item]")
+        page_2 = Embed().make_emb(title="[Gem Shop] >>> Amathy sells:", desc="The following can be bought with gems.", footer="Page 2/2 - To buy something, type a buy [item]")
+        for item in self.shop:
+            price = item["price"]
+            # if lv > 0:
+            #     price = price * lv
+            curr = item["currency"]
+            field = " | ".join(item["name"])
+            field_str = self.bot.funx.group_digit(price)
+            if curr == "coins":
+                page_1.add_field(name=field, value=f"{field_str} coins", inline=True)
+            else:
+                page_2.add_field(name=field, value=f"{field_str} gems", inline=True)
+        await self.bot.funx.embed_menu(ctx, [page_1, page_2])
 
 
 def setup(bot):
