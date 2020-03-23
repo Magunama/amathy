@@ -2,7 +2,7 @@ import math
 import re
 import discord
 import lavalink
-from utils.checks import is_vip
+from utils.checks import UserCheck, GuildCheck
 from discord.ext import commands
 
 url_rx = re.compile('https?:\\/\\/(?:www\\.)?.+')  # noqa: W605
@@ -231,8 +231,8 @@ class Music(commands.Cog):
             await player.set_pause(True)
             await ctx.send('🎧 ⏯ **| Paused** 🎧')
 
+    @UserCheck.is_vip()
     @commands.command(aliases=['vol'])
-    @is_vip()
     async def volume(self, ctx, volume: int = None):
         """Music|Changes the player's volume.(0-1000)|"""
         player = self.bot.lavalink.players.get(ctx.guild.id)
@@ -253,8 +253,8 @@ class Music(commands.Cog):
         player.shuffle = not player.shuffle
         await ctx.send('🔀 | Shuffle ' + ('enabled' if player.shuffle else 'disabled'))
 
+    @UserCheck.is_vip()
     @commands.command(aliases=['loop'])
-    @is_vip()
     async def repeat(self, ctx):
         """Music|Repeats the current song until the command is invoked again.|"""
         player = self.bot.lavalink.players.get(ctx.guild.id)

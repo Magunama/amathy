@@ -1,4 +1,4 @@
-from utils.checks import check_create_file, check_create_folder
+from utils.checks import FileCheck, GuildCheck
 from discord.ext import commands
 import discord
 from utils.embed import Embed
@@ -14,9 +14,10 @@ class Server(commands.Cog):
         self.welcome_roles, self.welcome_messages = self.load_welcome_files()
 
     def load_welcome_files(self):
-        check_create_folder("data/welcome/")
-        check_create_file(self.wrole_path, "{}")
-        check_create_file(self.wmessage_path, "{}")
+        fchk = FileCheck()
+        fchk.check_create_folder("data/welcome/")
+        fchk.check_create_file(self.wrole_path, "{}")
+        fchk.check_create_file(self.wmessage_path, "{}")
 
         # Welcome roles
         with open(self.wrole_path, 'r') as fp:
@@ -59,8 +60,8 @@ class Server(commands.Cog):
                 except discord.errors.Forbidden:
                     pass
 
+    @GuildCheck.is_guild()
     @commands.group(aliases=["guild"])
-    @commands.guild_only()
     async def server(self, ctx):
         """Utility|Shows server info/settings.|"""
         if ctx.invoked_subcommand is None:
@@ -89,7 +90,6 @@ class Server(commands.Cog):
             status = str(member.status)
             if not status == "offline":
                 online_members += 1
-        members = ctx.guild.m
         embed.add_field(name="Members", value=members, inline=True)
         embed.add_field(name="Bots", value=bots, inline=True)
         embed.add_field(name="Online members", value=online_members, inline=True)
@@ -125,6 +125,7 @@ class Server(commands.Cog):
             string.append("{} - {}".format(nama, idu))
         await ctx.send("\n".join(string))
 
+    @GuildCheck.is_guild()
     @commands.group()
     @commands.has_permissions(administrator=True)
     async def welcome(self, ctx):

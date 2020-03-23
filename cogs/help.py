@@ -5,7 +5,7 @@ from utils.embed import Embed
 class Help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.help_categories = ["music", "media", "utility", "fun", "info", "explicit"]
+        self.help_categories = ["music", "media", "utility", "fun", "info", "explicit", "creator"]
 
     async def send_help(self, cmd):
         subcmds = []

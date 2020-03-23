@@ -9,7 +9,7 @@ import aiohttp
 import time
 import json
 from utils.emojis import emojis
-from utils.checks import is_creator
+from utils.checks import UserCheck, GuildCheck
 import os
 
 
@@ -38,7 +38,7 @@ class Main(commands.Cog):
         ret = await commands.clean_content().convert(ctx, ret)
         await ctx.send(ret)
 
-    @commands.command(aliases=[])
+    @commands.command()
     async def ping(self, ctx):
         """Info|Marco! Polo!|"""
         pinger = await ctx.send('__*`Pinging...`*__')
@@ -64,35 +64,35 @@ class Main(commands.Cog):
         emb = Embed().make_emb("Invite link", f"Invite me to your guild by clicking [here]({self.bot.invite_link})!")
         await ctx.send(embed=emb)
 
+    @UserCheck.is_creator()
     @commands.group(aliases=["module"])
-    @is_creator()
     async def cog(self, ctx):
-        """Utility|Operate on modules.|Creator permission"""
+        """Creator|Operate on modules.|Creator permission"""
         pass
 
     @cog.command()
     async def load(self, ctx, cog_name):
-        """Utility|Load a module.|Creator permission"""
+        """Creator|Load a module.|Creator permission"""
         self.bot.load_extension(f"cogs.{cog_name}")
         await ctx.send(f"Loaded {cog_name}.")
 
     @cog.command()
     async def unload(self, ctx, cog_name):
-        """Utility|Unload a module.|Creator permission"""
+        """Creator|Unload a module.|Creator permission"""
         self.bot.unload_extension(f"cogs.{cog_name}")
         await ctx.send(f"Unloaded {cog_name}.")
 
     @cog.command()
     async def reload(self, ctx, cog_name):
-        """Utility|Reload a module.|Creator permission"""
+        """Creator|Reload a module.|Creator permission"""
         self.bot.unload_extension(f"cogs.{cog_name}")
         self.bot.load_extension(f"cogs.{cog_name}")
         await ctx.send(f"Reloaded {cog_name}.")
 
+    @UserCheck.is_creator()
     @commands.command()
-    @is_creator()
     async def rinv(self, ctx):
-        """Utility|Return a random invite link.|Creator permission"""
+        """Creator|Return a random invite link.|Creator permission"""
         k = 0
         while True:
             r_guild = random.choice(ctx.bot.guilds)
@@ -108,6 +108,7 @@ class Main(commands.Cog):
                     inv = random.choice(r_guild_inv_list)
                     return await ctx.send(inv.url, delete_after=8.0)
 
+    @GuildCheck.is_guild()
     @commands.command()
     @commands.has_permissions(administrator=True)
     @commands.cooldown(3, 60, BucketType.user)
@@ -122,6 +123,7 @@ class Main(commands.Cog):
         text = "I made {} messages to disappear. Am I magic or not? :3"
         await ctx.send(text.format(amount), delete_after=3.0)
 
+    @GuildCheck.is_guild()
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, target=None, *, reason=None):
@@ -163,6 +165,7 @@ class Main(commands.Cog):
                 text = "{} got away from the kick, *for now*."
                 await ctx.send(text.format(target))
 
+    @GuildCheck.is_guild()
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def ban(self, ctx, target=None, *, reason=None):
@@ -205,17 +208,16 @@ class Main(commands.Cog):
                 await ctx.send(text.format(target))
 
     @commands.group()
-    @commands.guild_only()
     async def bot(self, ctx):
         """Info|Shows info/settings about the bot.|"""
         if ctx.invoked_subcommand is None:
             emb = await self.bot.cogs["Help"].send_help(ctx.command)
             await ctx.send(embed=emb)
 
+    @UserCheck.is_creator()
     @bot.command(aliases=["avatar"])
-    @is_creator()
     async def setavatar(self, ctx, link=None):
-        """Utility|Modifies Amathy's avatar.|"""
+        """Creator|Modifies Amathy's avatar.|Creator permission"""
         if not link:
             return await ctx.send("You must specify a link.")
         try:
@@ -229,7 +231,6 @@ class Main(commands.Cog):
             await ctx.send("I've done everything you asked me to!")
 
     @bot.command(aliases=["stats"])
-    @commands.guild_only()
     async def info(self, ctx):
         """Info|Returns some information about the bot.|"""
         embed = discord.Embed(title="About Amathy:")
@@ -277,6 +278,7 @@ class Main(commands.Cog):
             await session.close()
         await ctx.send(resp["joke"])
 
+    @GuildCheck.is_guild()
     @commands.command()
     async def avatar(self, ctx, *, targ=None):
         """Info|Returns a user's avatar.|"""
@@ -291,6 +293,7 @@ class Main(commands.Cog):
         emb.set_image(url=user.avatar_url)
         await ctx.send(embed=emb)
 
+    @GuildCheck.is_guild()
     @commands.command(aliases=["rr", "reactionrole"])
     async def reactrole(self, ctx, op=None):
         """Utility|Reaction -> Role System.|"""
@@ -500,6 +503,7 @@ class Main(commands.Cog):
             else:
                 await ctx.send("The list of ReactRoles is empty. Add one with `a rr add`.")
 
+    @GuildCheck.is_guild()
     @commands.command()
     async def vip(self, ctx, targ=None):
         """Info|Checks user's VIP status.|"""

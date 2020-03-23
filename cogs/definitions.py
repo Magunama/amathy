@@ -1,5 +1,6 @@
 from discord.ext import commands
 from utils.embed import Embed
+from utils.checks import GuildCheck
 import datetime
 import asyncpg
 import random
@@ -130,6 +131,7 @@ class Definitions(commands.Cog):
             text = f"No definition found for `{def_name}`. :slight_frown:"
             await ctx.send(text)
 
+    @GuildCheck.is_guild()
     @commands.command(aliases=["dset"])
     async def defset(self, ctx, def_string=None):
         """Fun|Add a local/global definition, depending on your VIP status.|"""
@@ -172,6 +174,7 @@ class Definitions(commands.Cog):
                     ret = "Unknown definition type! Try again?"
                 await ctx.send(ret)
 
+    @GuildCheck.is_guild()
     @commands.command(aliases=["ddel"])
     async def defdel(self, ctx, def_name=None):
         """Fun|Remove a definition.|"""
@@ -211,6 +214,7 @@ class Definitions(commands.Cog):
                     ret = "Invalid confirmation! Try again?"
                 await ctx.send(ret)
 
+    @GuildCheck.is_guild()
     @commands.command(aliases=["dlist"])
     async def deflist(self, ctx, targ=None):
         """Fun|Read someone's definitions.|"""

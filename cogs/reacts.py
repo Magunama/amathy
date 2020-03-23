@@ -3,7 +3,7 @@ import aiohttp
 import discord
 from discord.ext.commands.cooldowns import BucketType
 from discord.ext import commands
-from utils.checks import is_nsfw
+from utils.checks import ChannelCheck
 
 
 # ###################### gud ol' giphy
@@ -280,8 +280,8 @@ class Reacts(commands.Cog):
         embed.set_image(url=nekos['neko'])
         await ctx.send(embed=embed)
 
+    @ChannelCheck.is_nsfw()
     @commands.command()
-    @is_nsfw()
     @commands.cooldown(3, 8, BucketType.user)
     async def porn(self, context):
         """Explicit|Porn - consume it with pleasure!|"""
@@ -496,7 +496,7 @@ class Reacts(commands.Cog):
         await ctx.send(content=ctx.message.author.mention, embed=em.set_image(url=res))
 
     @commands.command()
-    @is_nsfw()
+    @ChannelCheck.is_nsfw()
     @commands.cooldown(3, 8, BucketType.user)
     async def hentai(self, context):
         """Explicit|Hentai and chill with your senpai/waifu!|"""

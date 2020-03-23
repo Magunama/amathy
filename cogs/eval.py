@@ -3,7 +3,7 @@ import io
 import textwrap
 import traceback
 from contextlib import redirect_stdout
-from utils.checks import is_creator
+from utils.checks import UserCheck
 from discord.ext import commands
 
 
@@ -11,10 +11,10 @@ class Eval(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @is_creator()
+    @UserCheck.is_creator()
     @commands.command(name='eval', aliases=["e"])
     async def _eval(self, ctx, *, body):
-        """Utility|Evaluates python code|Creator permission"""
+        """Creator|Evaluates python code|Creator permission"""
         env = {
             'ctx': ctx,
             'bot': self.bot,

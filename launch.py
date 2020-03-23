@@ -1,14 +1,15 @@
 import asyncio
 from mainbot import bot
-from utils.checks import check_create_folder, check_copy_file
+from utils.checks import FileCheck
 import json
 import asyncpg
 from utils.funx import Funx
 
 
 def load_settings():
-    check_create_folder("data")
-    check_copy_file("data/settings.json")
+    fchk = FileCheck()
+    fchk.check_create_folder("data")
+    fchk.check_copy_file("data/settings.json")
     with open("data/settings.json") as f:
         print("[INFO] Loaded settings.")
         return json.load(f)

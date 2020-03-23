@@ -3,6 +3,7 @@ from discord.ext import commands
 import itertools
 import os
 import json
+import sys, traceback
 
 
 def get_prefix(bot, message):
@@ -54,6 +55,18 @@ async def on_shard_ready(shard):
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    if hasattr(ctx.command, 'on_error'):
+        return
+    ignored = (commands.CommandNotFound, commands.CheckFailure)
+    error = getattr(error, 'original', error)
+    if isinstance(error, ignored):
+        return
+    print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+    traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
 @bot.event
