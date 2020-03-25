@@ -9,7 +9,7 @@ import aiohttp
 import time
 import json
 from utils.emojis import emojis
-from utils.checks import UserCheck, GuildCheck
+from utils.checks import UserCheck, GuildCheck, FileCheck
 import os
 
 
@@ -528,6 +528,29 @@ class Main(commands.Cog):
             value=vip_days)
         embed.set_footer(text="[Notice] VIP days go down every day between 0 and 1 AM.")
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def flip(self, ctx):
+        async def dwn_img(source, savepath):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(source) as resp:
+                    if resp.status == 200:
+                        resp = await resp.read()
+                        with open(savepath, "wb") as fp:
+                            fp.write(resp)
+        fchk = FileCheck()
+        fchk.check_create_folder("data/flip")
+        head_file = fchk.check_file("data/flip/heads.png")
+        if not head_file:
+            await dwn_img("https://i.imgur.com/sq6ZDOx.png", "data/flip/heads.png")
+        tail_file = fchk.check_file("data/flip/tails.png")
+        if not tail_file:
+            await dwn_img("https://i.imgur.com/N5ixRZI.png", "data/flip/tails.png")
+        pick = random.choice([("data/flip/heads.png", "Heads!"), ("data/flip/tails.png", "Tails!")])
+        link = pick[0]
+        text = pick[1]
+        files = [discord.File(link, 'coin.png')]
+        await ctx.send(text, files=files)
 
     @commands.command(aliases=["sys"])
     @commands.cooldown(1, 8, BucketType.user)

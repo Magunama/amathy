@@ -16,12 +16,14 @@ class Tasks(commands.Cog):
         self.reward_votes.start()
         self.bot_activity.start()
         self.vip_days.start()
+        self.refill_bet.start()
 
     def cog_unload(self):
         self.post_gcount.cancel()
         self.reward_votes.cancel()
         self.bot_activity.cancel()
         self.vip_days.cancel()
+        self.refill_bet.cancel()
 
     async def send_whook(self, u_name, multi):
         url = self.bot.webhook_url
@@ -64,8 +66,19 @@ class Tasks(commands.Cog):
 
     @vip_days.before_loop
     async def before_vip_days(self):
+        await self.bot.wait_until_ready()
         interval = self.get_vip_interval()
         await asyncio.sleep(interval.total_seconds())
+
+    @tasks.loop(minutes=5)
+    async def refill_bet(self):
+        """Refill bets for gamblers."""
+        script = "update amathy.timers set bet_left = timers.bet_left + 1 where bet_left < 20"
+        await self.bot.funx.execute(script)
+
+    @refill_bet.before_loop
+    async def before_refill_bet(self):
+        await self.bot.wait_until_ready()
 
     @tasks.loop(minutes=5)
     async def bot_activity(self):
@@ -83,7 +96,7 @@ class Tasks(commands.Cog):
         await self.bot.change_presence(activity=game)
 
     @bot_activity.before_loop
-    async def before_reward_votes(self):
+    async def before_bot_activity(self):
         await self.bot.wait_until_ready()
 
     @tasks.loop(minutes=1)

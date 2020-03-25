@@ -1,6 +1,8 @@
 from discord.ext import commands
 from utils.embed import Embed
+from discord.ext.commands.cooldowns import BucketType
 from utils.checks import UserCheck, GuildCheck
+from math import ceil
 import datetime
 import random
 import asyncio
@@ -27,7 +29,7 @@ class Economy(commands.Cog):
             return await ctx.send("Wrong quantity provided! Usage: `a buy [item] [quantity]`.")
         quantity = int(quantity)
         user_id = ctx.author.id
-        name = item["name"][0]
+        name = item["name"][1]
         price = item["price"] * quantity
         curr = item["currency"]
         if curr == "coins":
@@ -68,10 +70,25 @@ class Economy(commands.Cog):
                 await self.bot.funx.save_inventory(user_id, inv)
                 await ctx.send(f"You have bought **{quantity} x {name}**! Enjoy!")
 
+    async def get_bet_time(self, user_id):
+        script = f"select bet, bet_left from amathy.timers where user_id={user_id}"
+        data = await self.bot.funx.fetch_one(script)
+        if not data:
+            data = datetime.datetime(1, 1, 1), 20
+        return data
+
+    async def save_bet_time(self, user_id, bet_left):
+        script = f"insert into amathy.timers (user_id, bet_left) values ({user_id}, {bet_left}) on conflict (user_id) do update set bet_left={bet_left}"
+        if bet_left == 0:
+            time_utc = datetime.datetime.utcnow()
+            time_now = time_utc + datetime.timedelta(hours=self.utc_diff)
+            script = "insert into amathy.timers (user_id, bet, bet_left) values ({0}, '{1}', {2}) on conflict (user_id) do update set bet='{1}', bet_left={2}"
+            script = script.format(user_id, time_now, bet_left)
+        await self.bot.funx.execute(script)
+
     @commands.command(aliases=["dailymc"])
     async def daily(self, ctx):
         """Fun|Get your daily coins!|"""
-        prev_coins = (await self.bot.funx.get_coins(ctx.author.id))[0]
         prev_time = await self.bot.funx.get_timer(ctx.author.id, "daily")
         expected_time = prev_time + datetime.timedelta(days=1)  # cooldown
         expected_time = expected_time.replace(hour=0, minute=0, second=0)  # because cooldown should not be constant
@@ -79,6 +96,7 @@ class Economy(commands.Cog):
         time_now = time_utc + datetime.timedelta(hours=self.utc_diff)
         if time_now >= expected_time:
             # todo: add xp multiplier
+            prev_coins = (await self.bot.funx.get_coins(ctx.author.id))[0]
             pick = random.randint(25, 100)
             after_coins = prev_coins + pick
             await self.bot.funx.save_pocket(ctx.author.id, after_coins)
@@ -516,6 +534,109 @@ class Economy(commands.Cog):
             else:
                 page_2.add_field(name=field, value=f"{field_str} gems", inline=True)
         await self.bot.funx.embed_menu(ctx, [page_1, page_2])
+
+    @commands.command(aliases=["bet"])
+    @commands.cooldown(3, 5, BucketType.user)
+    async def betcoins(self, ctx, bet_sum=None, guess1=None, guess2=None):
+        """Fun|Be the gambler you always wanted to be!|"""
+        # todo: add megatoken
+        max_bet_value = 20000
+        usage_text = """Get your coins and bet as a true gambler! This is how to play:
+    **1.**`a bet [bet_sum]` (You win **x1.5** coins if the rolls are equal);
+    **2.**`a bet [bet_sum] [guess1]` (You win **x1.5** coins if you guess one number);   
+    **3.**`a bet [bet_sum] [guess1] [guess2]` (You win **x2** coins if you guess both numbers).
+You have **2%** chance to crack one die. Unused bets **stack** up to **20**. 
+You get to bet every 5 minutes if you don't have any bets stacked.
+To limit spam, you can do **no more** than **3 bets** in **5 seconds**."""
+        if not bet_sum:
+            return await ctx.send(usage_text)
+
+        prev_time, bet_left = await self.get_bet_time(ctx.author.id)
+
+        if bet_left == 0:
+            expected_time = prev_time + datetime.timedelta(minutes=5)  # time until refill
+            time_utc = datetime.datetime.utcnow()
+            time_now = time_utc + datetime.timedelta(hours=self.utc_diff)
+            if time_now >= expected_time:
+                await ctx.send("You will be able to bet again in any moment now.")
+            left = self.bot.funx.delta2string(expected_time - time_now)
+            text = ":game_die: | {}, you have to wait **{}** until you can throw the dice again."
+            return await ctx.send(text.format(ctx.author.mention, left))
+
+        count = await self.bot.funx.get_inv_item_count(ctx.author.id, "dice")
+        if count < 2:
+            return await ctx.send("You can't roll dice without dice! Buy at least two from the shop to use this command.")
+
+        prev_coins = (await self.bot.funx.get_coins(ctx.author.id))[0]
+        if bet_sum in ["max", "all"]:
+            bet_sum = prev_coins
+        else:
+            if not bet_sum.isdigit():
+                return await ctx.send(usage_text)
+            bet_sum = int(bet_sum)
+            if not bet_sum > 0:
+                return await ctx.send(usage_text)
+        if bet_sum > prev_coins:
+            return await ctx.send("Insufficient coins to bet!")
+        if bet_sum > max_bet_value:
+            bet_sum = max_bet_value
+            await ctx.send(f"You can't bet more than {max_bet_value} {self.mc_emoji} for now.")
+
+        roll1 = random.randint(1, 6)
+        roll2 = random.randint(1, 6)
+
+        mode = 0
+        if guess1 is not None:
+            if not guess1.isdigit():
+                return await ctx.send(usage_text)
+            guess1 = int(guess1)
+            if not 1 <= guess1 <= 6:
+                return await ctx.send(usage_text)
+            mode = 1
+            if guess2 is not None:
+                if not guess2.isdigit():
+                    return await ctx.send(usage_text)
+                guess2 = int(guess2)
+                if not 1 <= guess2 <= 6:
+                    return await ctx.send(usage_text)
+                mode = 2
+
+        main_text = f":game_die: | Your bet: {bet_sum}. The dice rolled: {roll1}, {roll2}."
+        mid_text = f"\nI'm sorry, {ctx.author.name},  you have lost."
+        after_bet = 0
+        if mode == 0:
+            # user wins x1.5 if the rolls are equal
+            if roll1 == roll2:
+                after_bet = ceil(1.5 * bet_sum)
+                mid_text = f"\n{ctx.author.mention}, You have won **{after_bet}** {self.mc_emoji} (x1.5)."
+        elif mode == 1:
+            # user wins x1.5 if one guess is ok
+            if guess1 in [roll1, roll2]:
+                after_bet = ceil(1.5 * bet_sum)
+                mid_text = f"\n{ctx.author.mention}, You have won **{after_bet}** {self.mc_emoji} (x1.5)."
+        else:
+            # user wins x3 if both guesses are ok
+            if (guess1 == roll1 and guess2 == roll2) or (guess1 == roll2 and guess2 == roll1):
+                after_bet = ceil(3 * bet_sum)
+                mid_text = f"\n{ctx.author.mention}, You have won **{after_bet}** {self.mc_emoji} (x3)."
+
+        bet_left -= 1
+        await self.save_bet_time(ctx.author.id, bet_left)
+
+        after_coins = prev_coins - bet_sum + after_bet
+        await self.bot.funx.save_pocket(ctx.author.id, after_coins)
+
+        end_text = f"\n[**{bet_left}** bets left]"
+        main_text = main_text + mid_text + end_text
+        await ctx.send(main_text)
+
+        cracked = random.choices([1, 0], [2, 98])
+        if cracked:
+            cracked_text = f"Oh, no, {ctx.author.mention}! One of your dice is now cracked! You need to buy another one."
+            inv = await self.bot.funx.get_inventory(ctx.author.id)
+            inv = self.bot.funx.inventory_rem(inv, "dice")
+            await self.bot.funx.save_inventory(ctx.author.id, inv)
+            await ctx.send(cracked_text)
 
 
 def setup(bot):

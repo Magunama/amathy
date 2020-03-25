@@ -65,6 +65,9 @@ async def on_command_error(ctx, error):
     error = getattr(error, 'original', error)
     if isinstance(error, ignored):
         return
+    if isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
+        cooltext = "You are on cooldown! Try again in {}s.".format(int(error.retry_after))
+        return await ctx.send(cooltext)
     print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
