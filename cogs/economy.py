@@ -544,8 +544,8 @@ class Economy(commands.Cog):
         usage_text = """Get your coins and bet as a true gambler! This is how to play:
     **1.**`a bet [bet_sum]` (You win **x1.5** coins if the rolls are equal);
     **2.**`a bet [bet_sum] [guess1]` (You win **x1.5** coins if you guess one number);   
-    **3.**`a bet [bet_sum] [guess1] [guess2]` (You win **x2** coins if you guess both numbers).
-You have **2%** chance to crack one die. Unused bets **stack** up to **20**. 
+    **3.**`a bet [bet_sum] [guess1] [guess2]` (You win **x3** coins if you guess both numbers).
+You have **5%** chance to crack one die. Unused bets **stack** up to **20**. 
 You get to bet every 5 minutes if you don't have any bets stacked.
 To limit spam, you can do **no more** than **3 bets** in **5 seconds**."""
         if not bet_sum:
@@ -628,15 +628,16 @@ To limit spam, you can do **no more** than **3 bets** in **5 seconds**."""
 
         end_text = f"\n[**{bet_left}** bets left]"
         main_text = main_text + mid_text + end_text
-        await ctx.send(main_text)
 
-        cracked = random.choices([1, 0], [2, 98])
+        cracked = random.choices([1, 0], [5, 95])[0]
         if cracked:
-            cracked_text = f"Oh, no, {ctx.author.mention}! One of your dice is now cracked! You need to buy another one."
+            cracked_text = f"\nOh, no, {ctx.author.mention}! One of your dice is now cracked! You need to buy another one."
             inv = await self.bot.funx.get_inventory(ctx.author.id)
             inv = self.bot.funx.inventory_rem(inv, "dice")
             await self.bot.funx.save_inventory(ctx.author.id, inv)
-            await ctx.send(cracked_text)
+            main_text = main_text + cracked_text
+
+        await ctx.send(main_text)
 
 
 def setup(bot):

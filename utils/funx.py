@@ -147,11 +147,10 @@ class Funx:
         return json.loads(data["inventory"])
 
     async def get_inv_item_count(self, user_id, item_name):
-        script = f"select inventory -> '{item_name}' from amathy.stats where user_id={user_id}"
-        data = await self.bot.funx.fetch_one(script)
-        if not data:
+        inventory = await self.get_inventory(user_id)
+        if item_name not in inventory:
             return 0
-        return int(data[0])
+        return inventory[item_name]
 
     @staticmethod
     def inventory_add(inventory, item_name, quantity=1):
