@@ -21,6 +21,10 @@ class Funx:
         return number_str + '.'.join(reversed(digit_groups))
 
     @staticmethod
+    def seconds2delta(secs):
+        return datetime.timedelta(seconds=secs)
+
+    @staticmethod
     def delta2string(string, lang="en"):
         dic1 = {"ro": ["zile", "ore", "minute", "secunde"],
                 "en": ["days", "hours", "minutes", "seconds"],

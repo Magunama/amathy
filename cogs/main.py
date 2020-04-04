@@ -16,6 +16,7 @@ import os
 class Main(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.utc_diff = bot.consts["utc_diff"]
 
     @staticmethod
     def get_size(bytes, suffix="B"):
@@ -279,7 +280,7 @@ class Main(commands.Cog):
         await ctx.send(resp["joke"])
 
     @GuildCheck.is_guild()
-    @commands.command()
+    @commands.command(aliases=["av"])
     async def avatar(self, ctx, *, targ=None):
         """Info|Returns a user's avatar.|"""
         if not targ:
@@ -526,7 +527,8 @@ class Main(commands.Cog):
         embed.add_field(
             name="Days remaining",
             value=vip_days)
-        embed.set_footer(text="[Notice] VIP days go down every day between 0 and 1 AM.")
+        utc_diff_sign = lambda a: f"+{a}" if a > 0 else a
+        embed.set_footer(text=f"[Notice] VIP days go down every day after 12 PM (UTC+{utc_diff_sign(self.utc_diff)}).")
         await ctx.send(embed=embed)
 
     @commands.command()

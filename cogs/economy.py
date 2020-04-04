@@ -16,6 +16,7 @@ class Economy(commands.Cog):
         self.mc_emoji = bot.get_emoji(bot.consts["mc_emoji_id"])
         self.shop = [{"name": ["chest", "chests"], "price": 1200, "currency": "coins"},
                      {"name": ["die", "dice"], "price": 80, "currency": "coins"}]
+        self.max_bet_value = 20000
 
     @staticmethod
     def can_buy(have, need):
@@ -328,7 +329,7 @@ class Economy(commands.Cog):
             return await ctx.send(text)
         old_coins = (await self.bot.funx.get_coins(targ.id))[0]
         new_coins = old_coins + val
-        await self.bot.funx.save_pocket(ctx.author.id, new_coins)
+        await self.bot.funx.save_pocket(targ.id, new_coins)
         await ctx.send(f"I've added {val} coins to {targ}'s pocket.")
 
     @addcoins.command(name="bank")
@@ -348,7 +349,7 @@ class Economy(commands.Cog):
             return await ctx.send(text)
         old_coins = (await self.bot.funx.get_coins(targ.id))[1]
         new_coins = old_coins + val
-        await self.bot.funx.save_bank(ctx.author.id, new_coins)
+        await self.bot.funx.save_bank(targ.id, new_coins)
         await ctx.send(f"I've added {val} coins to {targ}'s bank.")
 
     @GuildCheck.is_guild()
@@ -375,7 +376,7 @@ class Economy(commands.Cog):
         else:
             text = "**What kind of values are you trying to input? :anger:**"
             return await ctx.send(text)
-        await self.bot.funx.save_pocket(ctx.author.id, val)
+        await self.bot.funx.save_pocket(targ.id, val)
         await ctx.send(f"I've edited {targ}'s pocket coins to {val}.")
 
     @editcoins.command(name="bank")
@@ -393,7 +394,7 @@ class Economy(commands.Cog):
         else:
             text = "**What kind of values are you trying to input? :anger:**"
             return await ctx.send(text)
-        await self.bot.funx.save_bank(ctx.author.id, val)
+        await self.bot.funx.save_bank(targ.id, val)
         await ctx.send(f"I've edited {targ}'s bank coins to {val}.")
 
     @commands.group()
@@ -540,7 +541,7 @@ class Economy(commands.Cog):
     async def betcoins(self, ctx, bet_sum=None, guess1=None, guess2=None):
         """Fun|Be the gambler you always wanted to be!|"""
         # todo: add megatoken
-        max_bet_value = 20000
+        max_bet_value = self.max_bet_value
         usage_text = """Get your coins and bet as a true gambler! This is how to play:
     **1.**`a bet [bet_sum]` (You win **x1.5** coins if the rolls are equal);
     **2.**`a bet [bet_sum] [guess1]` (You win **x1.5** coins if you guess one number);   
@@ -638,6 +639,67 @@ To limit spam, you can do **no more** than **3 bets** in **5 seconds**."""
             main_text = main_text + cracked_text
 
         await ctx.send(main_text)
+
+    @commands.command()
+    async def wheel(self, ctx, bet_sum=None):
+        # todo: check embed perms
+        bet_sum_text = "You have to type the value of coins you'd like to bet."
+        if not bet_sum:
+            return await ctx.send(bet_sum_text)
+        max_bet_value = self.max_bet_value
+        wheel_data = (
+            (":arrow_upper_left:", 1.6), (":arrow_up:", 0.0), (":arrow_upper_right:", 2.3),
+            (":arrow_left:", 0.5), (":arrow_right:", 1.2),
+            (":arrow_lower_left:", 0.2), (":arrow_down:", 2.0), (":arrow_lower_right:", 2.6)
+        )
+        prev_time = await self.bot.funx.get_timer(ctx.author.id, "wheel")
+        expected_time = prev_time + datetime.timedelta(hours=1)  # cooldown
+        time_utc = datetime.datetime.utcnow()
+        time_now = time_utc + datetime.timedelta(hours=self.utc_diff)
+        if time_now < expected_time:
+            left = self.bot.funx.delta2string(expected_time-time_now)
+            text = ":ferris_wheel: | {}, you have to wait **{}** until you can spin the weel again."
+            return await ctx.send(text.format(ctx.author.mention, left))
+        prev_coins = (await self.bot.funx.get_coins(ctx.author.id))[0]
+        if bet_sum in ["max", "all"]:
+            bet_sum = prev_coins
+        else:
+            if not bet_sum.isdigit():
+                return await ctx.send(bet_sum_text)
+            bet_sum = int(bet_sum)
+            if not bet_sum > 0:
+                return await ctx.send(bet_sum_text)
+        if bet_sum > prev_coins:
+            return await ctx.send("Insufficient coins to bet!")
+        if bet_sum > max_bet_value:
+            bet_sum = max_bet_value
+            await ctx.send(f"You can't bet more than {max_bet_value} {self.mc_emoji} for now.")
+        pick = random.choice(wheel_data)
+        mid_emoji, proc = pick
+        after_bet = ceil(bet_sum * proc)
+        after_coins = prev_coins - bet_sum + after_bet
+        await self.bot.funx.save_pocket(ctx.author.id, after_coins)
+        await self.bot.funx.save_timer(ctx.author.id, "wheel", time_now)
+        space = 10 * "\u00A0"
+        mid_space = 8 * "\u00A0"
+        wheel_ret = ""
+        for i in range(0, len(wheel_data) + 1):
+            if i == 4:
+                wheel_ret += f"{mid_space}{mid_emoji}{mid_space}{space}"
+            else:
+                if i > 4:
+                    proc = wheel_data[i-1][1]
+                else:
+                    proc = wheel_data[i][1]
+                wheel_ret += f"(x{proc}){space}"
+            if i % 3 == 2:
+                wheel_ret += "\n\n"
+        emb_desc = f"{ctx.author.mention}, you are left with {after_coins} {self.mc_emoji}... :confused:"
+        if after_coins > prev_coins:
+            emb_desc = f"{ctx.author.mention}, you made a profit of {after_coins - prev_coins} {self.mc_emoji}!!! :smile:"
+        fields = [["Thus The Wheel stopped:", f"**{wheel_ret}**", True]]
+        embed = Embed().make_emb("The Wheel of Fortune!", emb_desc, fields=fields)
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
