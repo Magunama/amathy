@@ -75,7 +75,36 @@ class Funx:
     def get_member_by_id(server, param):
         return server.get_member(param)
 
+    @staticmethod
+    def search_for_text_channel(ctx, targ):
+        if targ.isdigit():
+            targ = ctx.guild.get_channel(int(targ))
+            if not isinstance(targ, discord.channel.TextChannel):
+                targ = None
+        else:
+            if targ.startswith("<#"):
+                targ = targ[2:-1]
+                targ = ctx.guild.get_channel(int(targ))
+                if not isinstance(targ, discord.channel.TextChannel):
+                    targ = None
+            else:
+                targ = discord.utils.find(lambda c: targ in c.name, ctx.guild.text_channels)
+        return targ
+
+    @staticmethod
+    def search_for_channel(ctx, targ):
+        if targ.isdigit():
+            targ = ctx.guild.get_channel(int(targ))
+        else:
+            if targ.startswith("<#"):
+                targ = targ[2:-1]
+                targ = ctx.guild.get_channel(int(targ))
+            else:
+                targ = discord.utils.find(lambda c: targ in c.name, ctx.guild.channels)
+        return targ
+
     def search_for_member(self, ctx, targ):
+        # todo: recheck function
         server = ctx.guild
         user = None
         if len(ctx.message.mentions) > 0:

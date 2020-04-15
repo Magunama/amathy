@@ -3,3 +3,4 @@ asyncpg
 discord.py[voice]
 psutil
 lavalink
+Pillow

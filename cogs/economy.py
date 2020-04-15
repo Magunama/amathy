@@ -542,13 +542,15 @@ class Economy(commands.Cog):
         """Fun|Be the gambler you always wanted to be!|"""
         # todo: add megatoken
         max_bet_value = self.max_bet_value
-        usage_text = """Get your coins and bet as a true gambler! This is how to play:
-    **1.**`a bet [bet_sum]` (You win **x1.5** coins if the rolls are equal);
-    **2.**`a bet [bet_sum] [guess1]` (You win **x1.5** coins if you guess one number);   
-    **3.**`a bet [bet_sum] [guess1] [guess2]` (You win **x3** coins if you guess both numbers).
-You have **5%** chance to crack one die. Unused bets **stack** up to **20**. 
-You get to bet every 5 minutes if you don't have any bets stacked.
-To limit spam, you can do **no more** than **3 bets** in **5 seconds**."""
+        usage_text = (
+            "Get your coins and bet as a true gambler! This is how to play:\n"
+            "       **1.**`a bet [bet_sum]` (You win **x1.5** coins if the rolls are equal);\n"
+            "       **2.**`a bet [bet_sum] [guess1]` (You win **x1.5** coins if you guess one number);\n"
+            "       **3.**`a bet [bet_sum] [guess1] [guess2]` (You win **x3** coins if you guess both numbers).\n"
+            "You have **5%** chance to crack one die. Unused bets **stack** up to **20**.\n"
+            "You get to bet every 5 minutes if you don't have any bets stacked.\n"
+            "To limit spam, you can do ** no more ** than ** 3 bets ** in ** 5 seconds **."
+        )
         if not bet_sum:
             return await ctx.send(usage_text)
 
@@ -642,6 +644,7 @@ To limit spam, you can do **no more** than **3 bets** in **5 seconds**."""
 
     @commands.command()
     async def wheel(self, ctx, bet_sum=None):
+        """Fun|Spin the Wheel of Fate!|"""
         # todo: check embed perms
         bet_sum_text = "You have to type the value of coins you'd like to bet."
         if not bet_sum:
@@ -658,7 +661,7 @@ To limit spam, you can do **no more** than **3 bets** in **5 seconds**."""
         time_now = time_utc + datetime.timedelta(hours=self.utc_diff)
         if time_now < expected_time:
             left = self.bot.funx.delta2string(expected_time-time_now)
-            text = ":ferris_wheel: | {}, you have to wait **{}** until you can spin the weel again."
+            text = ":ferris_wheel: | {}, you have to wait **{}** until you can spin the wheel again."
             return await ctx.send(text.format(ctx.author.mention, left))
         prev_coins = (await self.bot.funx.get_coins(ctx.author.id))[0]
         if bet_sum in ["max", "all"]:
