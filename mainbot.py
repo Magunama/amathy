@@ -71,8 +71,9 @@ async def on_command_error(ctx, error):
         cool_time = bot.funx.delta2string(cool_time)
         cool_text = "[`{}`]\nYou are on cooldown! Try again in **{}**.".format(ctx.command.name, cool_time)
         return await ctx.send(cool_text)
-    print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
-    traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+    if hasattr(error, "__traceback__"):
+        print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
 @bot.event

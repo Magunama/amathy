@@ -250,7 +250,7 @@ class Main(commands.Cog):
         embed.add_field(name="Uptime", value=uptime_str, inline=True)
         total_players = 0
         playing_players = 0
-        data = self.bot.lavalink.players.players
+        data = self.bot.lavalink.player_manager.players
         for k in data:
             player = data[k]
             if player.is_connected:
