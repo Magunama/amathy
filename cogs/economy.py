@@ -457,27 +457,34 @@ class Economy(commands.Cog):
     @top.command()
     async def votes(self, ctx):
         """Info|Shows the top 10 people with the most votes.|"""
-        script = "select user_id, vote_num from amathy.votes"
+        script = "select user_id, monthly_votes, total_votes from amathy.votes"
         data = await self.bot.funx.fetch_many(script)
-        top = dict()
+        top = {"monthly": {}, "total": {}}
         for elem in data:
-            user_id, votes = elem
-            top[user_id] = votes
-        sorted_top = sorted(top, key=top.get, reverse=True)
-        emb = Embed().make_emb("Global top - Monthly votes", "To get listed, vote for me ([here](https://tiny.cc/voteama)).")
-        max_range = 10
-        if len(sorted_top) < max_range:
-            max_range = len(sorted_top)
-        for index in range(0, max_range):
-            user_id = sorted_top[index]
-            votes = self.bot.funx.group_digit(top[user_id])
-            if user_id == ctx.author.id:
-                text = "Author position >>> No. {}: {} - {} votes <<<"
-                emb.set_footer(text=text.format(index + 1, ctx.author.name, votes))
-            user = self.bot.get_user(user_id)
-            if user:
-                emb.add_field(name="No. {}: {}".format(index + 1, user.name), value="{} votes".format(votes))
-        await ctx.send(embed=emb)
+            user_id, monthly_votes, total_votes = elem
+            top["monthly"][user_id] = monthly_votes
+            top["total"][user_id] = total_votes
+        embeds = list()
+        for page in ["monthly", "total"]:
+            sorted_top = sorted(top[page], key=top[page].get, reverse=True)
+            emb = Embed().make_emb(f"Global top - {page.title()} votes", "To get listed, vote for me ([here](https://tiny.cc/voteama)).")
+            max_range = 10
+            if len(sorted_top) < max_range:
+                max_range = len(sorted_top)
+            for index in range(0, max_range):
+                user_id = sorted_top[index]
+                votes = top[page][user_id]
+                if votes == 0:
+                    continue
+                votes = self.bot.funx.group_digit(votes)
+                if user_id == ctx.author.id:
+                    text = "Author position >>> No. {}: {} - {} votes <<<"
+                    emb.set_footer(text=text.format(index + 1, ctx.author.name, votes))
+                user = self.bot.get_user(user_id)
+                if user:
+                    emb.add_field(name="No. {}: {}".format(index + 1, user.name), value="{} votes".format(votes))
+            embeds.append(emb)
+        await self.bot.funx.embed_menu(ctx, embeds)
 
     @commands.command()
     async def buy(self, ctx, item, quantity="1"):

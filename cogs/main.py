@@ -528,7 +528,7 @@ class Main(commands.Cog):
             name="Days remaining",
             value=vip_days)
         utc_diff_sign = lambda a: f"+{a}" if a > 0 else a
-        embed.set_footer(text=f"[Notice] VIP days go down every day after 12 PM (UTC+{utc_diff_sign(self.utc_diff)}).")
+        embed.set_footer(text=f"[Notice] VIP days go down every day after 12 PM (UTC{utc_diff_sign(self.utc_diff)}).")
         await ctx.send(embed=embed)
 
     @commands.command()

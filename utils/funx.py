@@ -159,6 +159,8 @@ class Funx:
         return data["xp"]
 
     async def get_vip_days(self, user_id):
+        if user_id in self.bot.owner_ids:
+            return 999
         script = f"select vip_days from amathy.stats where user_id={user_id}"
         data = await self.bot.funx.fetch_one(script)
         if not data:
