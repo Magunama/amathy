@@ -41,7 +41,7 @@ Please contact me on Discord (Magunama#6264) regarding contributions.
 
 * **Robert-Cristian Ciama** - [Magunama](https://github.com/Magunama)
 
-See also the list of [contributors](https://github.com/Magunama/amathy-slave/graphs/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/Magunama/amathy/graphs/contributors) who participated in this project.
 
 ## License
 
