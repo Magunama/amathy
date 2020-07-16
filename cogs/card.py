@@ -1,5 +1,6 @@
 from discord.ext import commands
 from utils.checks import FileCheck
+from utils.embed import Embed
 from PIL import Image, ImageFont, ImageDraw
 import discord.errors
 import random
@@ -12,7 +13,7 @@ class Card(commands.Cog):
         self.bot = bot
         self.active_key_drops = set()
         self.key_drop_imgs_path = "data/card/images/key_drop"
-        self.key_drop_font_path = "utils/base/card/fonts/Snap.ttf"
+        self.key_drop_font_path = "utils/base/card/fonts/Resotedream.ttf"
         images_found = FileCheck().check_folder(self.key_drop_imgs_path)
         if not images_found:
             self.gen_key_drop_imgs()
@@ -33,12 +34,24 @@ class Card(commands.Cog):
         self.active_key_drops.add(chan_id)
         pick = random.choice(os.listdir(self.key_drop_imgs_path))
         key_phrase = pick.split(".")[0]
-        with open(f"{self.key_drop_imgs_path}/{pick}", 'rb') as g:
-            prev_text = "A magical key has appeared!\nBe the first to type the word **between the arrow heads** from the picture to get it!"
-            try:
-                first = await chan_obj.send(prev_text, file=discord.File(g.name))
-            except discord.errors.Forbidden:
-                return await chan_obj.send("I was going to drop a key for you, but you're not giving me perms to attach files! :confused:")
+
+        title = "A magical :key: has appeared!"
+        desc = "Be the first to type the word **between the arrow heads** from the picture to get it!"
+        perms = chan_obj.permissions_for(chan_obj.guild.me)
+        if perms.embed_links:
+            with open(f"{self.key_drop_imgs_path}/{pick}", 'rb') as g:
+                embed = Embed().make_emb(title, desc)
+                file = discord.File(g, filename="keydrop.png")
+                embed.set_image(url="attachment://keydrop.png")
+                first = await chan_obj.send(file=file, embed=embed)
+        elif perms.attach_files:
+            with open(f"{self.key_drop_imgs_path}/{pick}", 'rb') as g:
+                prev_text = title + "\n" + desc
+                first = await chan_obj.send(prev_text, file=discord.File(g, filename="keydrop.png"))
+        else:
+            if perms.send_messages:
+                await chan_obj.send("I was going to drop a key for you, but you're not giving me perms to `attach files`! :confused:")
+            return self.active_key_drops.remove(chan_id)
 
         def check(msg):
             if msg.content.lower() == key_phrase:
@@ -73,20 +86,21 @@ class Card(commands.Cog):
             'tomato', 'trophy', 'vision', 'vote', 'waifu', 'yogurt'
         ]
         FileCheck().check_create_folder(self.key_drop_imgs_path)
-        font = ImageFont.truetype(self.key_drop_font_path, 30)
+        font = ImageFont.truetype(self.key_drop_font_path, 60)
         shadow_color = "white"
         for key_word in word_list:
             img = Image.open("utils/base/card/key_background.png")
             draw = ImageDraw.Draw(img)
-            text = ">" + key_word + "<"
+            text = "> " + key_word + " <"
             text_w, text_h = draw.textsize(text, font=font)
             img_w, img_h = img.size
             x = (img_w - text_w) / 2
-            y = 150
-            draw.text((x - 1, y - 1), text, font=font, fill=shadow_color)
-            draw.text((x + 1, y - 1), text, font=font, fill=shadow_color)
-            draw.text((x - 1, y + 1), text, font=font, fill=shadow_color)
-            draw.text((x + 1, y + 1), text, font=font, fill=shadow_color)
+            y = 360
+            b = 3  # outline border
+            draw.text((x - b, y - b), text, font=font, fill=shadow_color)
+            draw.text((x + b, y - b), text, font=font, fill=shadow_color)
+            draw.text((x - b, y + b), text, font=font, fill=shadow_color)
+            draw.text((x + b, y + b), text, font=font, fill=shadow_color)
             draw.text((x, y), text, (128, 0, 0), font=font)
             img.save(f'{self.key_drop_imgs_path}/{key_word}.png')
 
