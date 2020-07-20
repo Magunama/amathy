@@ -14,9 +14,17 @@ class Economy(commands.Cog):
         self.bot = bot
         self.utc_diff = bot.consts["utc_diff"]
         self.mc_emoji = bot.get_emoji(bot.consts["mc_emoji_id"])
-        self.shop = [{"name": ["chest", "chests"], "price": 1200, "currency": "coins"},
-                     {"name": ["die", "dice"], "price": 80, "currency": "coins"}]
+        self.shop = [
+            {"name": ["chest", "chests"], "price": 1200, "currency": "coins"},
+            {"name": ["die", "dice"], "price": 80, "currency": "coins"}
+        ]
         self.max_bet_value = 20000
+        # Chest drops
+        # {"trap":66, "nametag":66,"rec":88,"ratioreset":33}
+        self.chest_drops = {
+            "chests": 50, "keys": 30, "xp": 70, "coins": 90, "gems": 10, "empty": 100
+        }
+        #########################
 
     @staticmethod
     def can_buy(have, need):
@@ -86,6 +94,33 @@ class Economy(commands.Cog):
             script = "insert into amathy.timers (user_id, bet, bet_left) values ({0}, '{1}', {2}) on conflict (user_id) do update set bet='{1}', bet_left={2}"
             script = script.format(user_id, time_now, bet_left)
         await self.bot.funx.execute(script)
+
+    @staticmethod
+    def inventory_item_count(inventory, item_name):
+        if item_name not in inventory:
+            return 0
+        return inventory[item_name]
+
+    @staticmethod
+    def using_chests(chest_count, key_count, quantity):
+        """Returns the number of chests that should be opened"""
+        if key_count >= chest_count:
+            openable = chest_count
+        else:
+            openable = key_count
+        if quantity.isdigit():
+            quantity = int(quantity)
+            if quantity > 0:
+                if quantity > openable:
+                    quantity = openable
+            else:
+                quantity = 1
+        else:
+            if quantity in ["all", "max"]:
+                quantity = openable
+            else:
+                quantity = 1
+        return quantity
 
     @commands.command(aliases=["dailymc"])
     async def daily(self, ctx):
@@ -710,6 +745,94 @@ class Economy(commands.Cog):
         fields = [["Thus The Wheel stopped:", f"**{wheel_ret}**", True]]
         embed = Embed().make_emb("The Wheel of Fortune!", emb_desc, fields=fields)
         await ctx.send(embed=embed)
+
+    @commands.group(aliases=["open"])
+    async def use(self, ctx):
+        """Fun|Use an item from your bag.|"""
+        if ctx.invoked_subcommand is None:
+            item_name = ctx.subcommand_passed
+            if not item_name:
+                return await ctx.send("You haven't selected any item! What do you expect me to do?")
+            i_found = None
+            for i in self.shop:
+                if item_name.lower() in i["name"]:
+                    i_found = i["name"]
+                    break
+            if not i_found:
+                return await ctx.send("I don't know this item and I don't know what it does! >.<")
+            else:
+                await ctx.send("You cannot use this item yet!")
+
+    @use.command(aliases=["chests"])
+    async def chest(self, ctx, quantity="1"):
+        """Fun|Open a chest and get rewards.|"""
+        inventory = await self.bot.funx.get_inventory(ctx.author.id)
+        chest_count = self.inventory_item_count(inventory, "chests")
+        if chest_count == 0:
+            return await ctx.send("I don't see any chests in your inventory!")
+        key_count = self.inventory_item_count(inventory, "keys")
+        if key_count == 0:
+            return await ctx.send("I don't see any keys in your inventory!")
+
+        using = self.using_chests(chest_count, key_count, quantity)
+        inventory = self.bot.funx.inventory_rem(inventory, "chests", using)
+        inventory = self.bot.funx.inventory_rem(inventory, "keys", using)
+
+        population = list()
+        weights = list()
+        rewards_dict = dict()
+        for item in self.chest_drops:
+            population.append(item)
+            weights.append(self.chest_drops[item])
+            rewards_dict[item] = 0
+        rewards = random.choices(population, weights=weights, k=using)
+        extra_xp = 0
+        for rew in rewards:
+            if rew == "chests":
+                num = random.randint(1, 2)
+            elif rew == "keys":
+                num = random.randint(1, 4)
+            elif rew == "xp":
+                num = random.randint(50, 200)
+            elif rew == "gems":
+                num = random.randint(1, 10)
+            elif rew == "coins":
+                num = random.randint(900, 1800)
+            else:
+                num = 1
+            rewards_dict[rew] += num
+            extra_xp += random.randint(8, 25)
+
+        empty = rewards_dict["empty"]
+        if using == empty:
+            rew_text = "You didn't win anything, {}. How unfortunate! :confused: You have received {} bonus xp."
+            rew_text = rew_text.format(ctx.author.name, extra_xp)
+        else:
+            del rewards_dict["empty"]
+            rew_text = "Congratulations, {}! You have won the following: `{}`. {} chests were empty. You have received {} bonus xp."
+            win_text = ""
+            for rew in rewards_dict:
+                if rewards_dict[rew] > 0:
+                    win_text += f"{rewards_dict[rew]} {rew}, "
+            rew_text = rew_text.format(ctx.author.name, win_text[:-2], empty, extra_xp)
+            if rewards_dict["chests"] > 0:
+                inventory = self.bot.funx.inventory_add(inventory, "chests", rewards_dict["chests"])
+            if rewards_dict["keys"] > 0:
+                inventory = self.bot.funx.inventory_add(inventory, "keys", rewards_dict["keys"])
+            if rewards_dict["coins"] > 0:
+                pocket_coins = (await self.bot.funx.get_coins(ctx.author.id))[0]
+                pocket_coins += rewards_dict["coins"]
+                await self.bot.funx.save_pocket(ctx.author.id, pocket_coins)
+            if rewards_dict["gems"] > 0:
+                gems = await self.bot.funx.get_gems(ctx.author.id)
+                gems += rewards_dict["gems"]
+                await self.bot.funx.save_gems(ctx.author.id, gems)
+        rewards_dict["xp"] += extra_xp
+        xp = await self.bot.funx.get_xp(ctx.author.id)
+        xp += rewards_dict["xp"]
+        await self.bot.funx.save_xp(ctx.author.id, xp)
+        await self.bot.funx.save_inventory(ctx.author.id, inventory)
+        await ctx.send(rew_text)
 
 
 def setup(bot):

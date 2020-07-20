@@ -235,6 +235,10 @@ class Funx:
         script = f"insert into amathy.stats (user_id, gems) values ({uid}, {val}) on conflict (user_id) do update set gems={val}"
         await self.execute(script)
 
+    async def save_xp(self, uid, val):
+        script = f"insert into amathy.stats (user_id, xp) values ({uid}, {val}) on conflict (user_id) do update set xp={val}"
+        await self.execute(script)
+
     async def save_timer(self, uid, cat, val):
         val = val.strftime(self.date_format)
         script = f"insert into amathy.timers (user_id, {cat}) values ({uid}, '{val}') on conflict (user_id) do update set {cat}='{val}'"
