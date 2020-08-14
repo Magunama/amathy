@@ -26,9 +26,9 @@ class Embed:
                         name = "\u200b"
                     if not value:
                         value = "\u200b"
-
-                inline = field[2]
-                if not inline:
+                try:
+                    inline = field[2]
+                except IndexError:
                     inline = True
                 if name and value:
                     embed.add_field(name=name, value=value, inline=inline)

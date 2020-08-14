@@ -9,13 +9,13 @@ class Creator(commands.Cog):
     @UserCheck.is_creator()
     @commands.group()
     async def reset(self, ctx):
-        """Reset command."""
+        """Creator|Reset command.|Creator permission"""
         if ctx.invoked_subcommand is None:
             await ctx.send("If you don't know how to use this, then you should not be using this!")
 
     @reset.command()
     async def votes(self, ctx):
-        """Resets monthly top.gg vote count."""
+        """Creator|Resets monthly top.gg vote count.|Creator permission"""
         script = "update amathy.votes set monthly_votes = 0;"
         await self.bot.funx.execute(script)
         await ctx.send("Monthly vote count has been reset.")

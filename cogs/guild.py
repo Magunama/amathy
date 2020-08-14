@@ -54,11 +54,12 @@ class Server(commands.Cog):
         serv_str = str(serv_obj.id)
         if serv_str in self.welcome_roles:
             roleobj = serv_obj.get_role(int(self.welcome_roles[serv_str]))
-            if not roleobj in before.roles:
-                try:
-                    await after.add_roles(roleobj)
-                except discord.errors.Forbidden:
-                    pass
+            if roleobj is None or roleobj in before.roles:
+                return
+            try:
+                await after.add_roles(roleobj)
+            except discord.errors.Forbidden:
+                pass
 
     @GuildCheck.is_guild()
     @commands.group(aliases=["guild"])
