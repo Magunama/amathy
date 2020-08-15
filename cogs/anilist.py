@@ -263,6 +263,8 @@ class Queries:
                     status
                     episodes
                     duration
+                    chapters
+                    volumes
                     isAdult
                     averageScore
                     meanScore
@@ -396,7 +398,7 @@ class Anime(commands.Cog):
                 rank = r["rank"]
                 break
         fields = [
-            ["Title", f"{title_romaji}\n{title_english}"],
+            ["Title", f"{title_romaji},\n{title_english}"],
             ["Type", data["format"]],
             ["Status", data["status"]],
             ["Episodes", data["episodes"]],
@@ -519,7 +521,7 @@ class Anime(commands.Cog):
                 rank = r["rank"]
                 break
         fields = [
-            ["Title", f"{title_romaji}\n{title_english}"],
+            ["Title", f"{title_romaji},\n{title_english}"],
             ["Type", data["format"]],
             ["Status", data["status"]],
             ["Chapters", data["chapters"]],
@@ -884,8 +886,13 @@ class Anime(commands.Cog):
         embeds = list()
         for index, entry in enumerate(data):
             page = self.ani_anime_page_1(title, entry)
-            # todo: add about and genres
+            # todo: remove rank, duration
             page.set_footer(text=f"{index+1}/{len(data)} - Powered by AniList API")
+            page.add_field(name="Genres", value=", ".join(entry["genres"]), inline=True)
+            synopsis = entry["description"]
+            if synopsis and len(synopsis) > 1000:
+                synopsis = synopsis[:1000] + "[...]"
+                page.add_field(name="Synopsis", value=synopsis, inline=False)
             embeds.append(page)
         return embeds
 
@@ -899,9 +906,14 @@ class Anime(commands.Cog):
             return
         embeds = list()
         for index, entry in enumerate(data):
-            page = self.ani_anime_page_1(title, entry)
-            # todo: add about and genres
+            page = self.ani_manga_page_1(title, entry)
+            # todo: remove rank, duration
             page.set_footer(text=f"{index + 1}/{len(data)} - Powered by AniList API")
+            page.add_field(name="Genres", value=", ".join(entry["genres"]), inline=True)
+            synopsis = entry["description"]
+            if synopsis and len(synopsis) > 1000:
+                synopsis = synopsis[:1000] + "[...]"
+                page.add_field(name="Synopsis", value=synopsis, inline=False)
             embeds.append(page)
         return embeds
 
