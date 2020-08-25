@@ -1,5 +1,6 @@
 from discord.ext import commands
 from discord.ext.commands.cooldowns import BucketType
+from discord import AllowedMentions
 import discord
 import psutil
 import platform
@@ -33,11 +34,10 @@ class Main(commands.Cog):
             bytes /= factor
 
     @commands.command()
-    @commands.has_permissions()
     async def say(self, ctx, *, ret):
         """Fun|Repeats your input.|"""
-        ret = await commands.clean_content().convert(ctx, ret)
-        await ctx.send(ret)
+        alm = AllowedMentions(users=True, everyone=False, roles=False)
+        await ctx.send(ret, allowed_mentions=alm)
 
     @commands.command()
     async def ping(self, ctx):

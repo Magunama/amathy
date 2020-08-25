@@ -36,12 +36,11 @@ if __name__ == "__main__":
     try:
         loop.run_until_complete(start_bot())
     except KeyboardInterrupt:
-        loop.run_until_complete(bot.logout())
+        loop.run_until_complete(bot.close())
         print("I'm going to sleep, master!")
         # todo: cancel tasks
     except Exception as e:
         print(f"[ERROR] {e}")
-    else:
-        print("I'm going to sleep, master!")
     finally:
+        print("I'm going to sleep, master!")
         loop.close()

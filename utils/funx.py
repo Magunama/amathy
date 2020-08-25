@@ -1,3 +1,4 @@
+from math import ceil, floor
 import datetime
 import discord
 import time
@@ -17,6 +18,19 @@ class BaseRequest:
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url, params=params) as response:
                 return await response.json()
+
+
+class Level:
+    base_xp = 250
+    exponent = 1.8
+
+    def from_xp(self, xp):
+        """Turn xp into level"""
+        return ceil((xp / self.base_xp) ** (1 / self.exponent))
+
+    def to_xp(self, lvl):
+        """Turn level into xp"""
+        return floor(self.base_xp * (lvl ** self.exponent))
 
 
 class Funx:

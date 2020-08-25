@@ -2,6 +2,7 @@ from discord.ext import commands
 from utils.embed import Embed
 from discord.ext.commands.cooldowns import BucketType
 from utils.checks import UserCheck, GuildCheck
+from utils.funx import Level
 from math import ceil
 import datetime
 import random
@@ -166,52 +167,19 @@ class Economy(commands.Cog):
         desc = f"Some details about {targ.name}:"
         author = {"name": "{} ({})".format(targ, targ.id), "icon_url": ""}
 
-        # script = "SELECT xp, imgsite, bio FROM stats WHERE user_id={}".format(targ.id)
-        # datasite = await funx.run_q(script)
-        # if datasite:
-        #     xpu, imgsite, bio = datasite
-        # else:
-        #     xpu, imgsite, bio = [0, None, None]
-        # lv = funx.get_lvl(xpu)
-        # if lv == 25:
-        #     prog = "  [" + str(xpu) + "/0]"
-        # elif lv > -1:
-        #     prog = "  [" + str(xpu) + "/" + str(funx.xpatrib[lv + 1]) + "]"
-        # else:
-        #     prog = "  [0/0]"
-        # embed.add_field(
-        #     name="• Level",
-        #     value=str(lv) + prog + "  (" + funx.get_lvlname(lv) + ")",
-        # )
-        # usr = await funx.get_rank(targ.id)
-        # if 3 <= usr <= 6:
-        #     climit, blimit = 80 * (10 ** 6), 120 * (10 ** 6)
-        # elif usr > 6:
-        #     climit, blimit = 80 * (10 ** 6), 170 * (10 ** 6)
-        # else:
-        #     climit, blimit = 20 * (10 ** 6), 100 * (10 **
         xp, gems, vip_days = await self.bot.funx.get_stats(targ.id)
+        lvl = Level().from_xp(xp)
+        next_xp = Level().to_xp(lvl)
+        progress = f"{lvl} [{xp} XP/{next_xp} XP]"
         pocket_coins, bank_coins = await self.bot.funx.get_coins(targ.id)
         total_coins = pocket_coins + bank_coins
         pocket_coins = self.bot.funx.group_digit(pocket_coins)
         bank_coins = self.bot.funx.group_digit(bank_coins)
         total_coins = self.bot.funx.group_digit(total_coins)
 
-        # if bio:
-        #     embed.add_field(
-        #         name="• Bio",
-        #         value=bio,
-        #     )
-        # if imgsite:
-        #     embed.set_image(url=imgsite)
-        #     embed.add_field(
-        #         name=" ឵឵ ឵឵",
-        #         value="**• Avatar site**",
-        #         inline=False,
-        #     )
         fields = [["• Created:", created_at, False],
                   ["• Joined:", joined_at, False],
-                  ["• XP:", str(xp), False],
+                  ["• Level:", progress, False],
                   ["• Gems:", str(gems), False],
                   ["• VIP days:", str(vip_days), False],
                   ["• Pocket:", f"{pocket_coins} {self.mc_emoji}", False],
@@ -464,9 +432,9 @@ class Economy(commands.Cog):
                 emb.add_field(name="No. {}: {}".format(index + 1, user.name), value="{} {}".format(coins, self.mc_emoji))
         await ctx.send(embed=emb)
 
-    @top.command()
+    @top.command(aliases=["lvl", "level", "exp"])
     async def xp(self, ctx):
-        """Info|Shows the top 10 people with the most XP.|"""
+        """Info|Shows the top 10 people with the highest level & XP.|"""
         script = "select user_id, xp from amathy.stats"
         data = await self.bot.funx.fetch_many(script)
         top = dict()
@@ -474,19 +442,21 @@ class Economy(commands.Cog):
             user_id, xp = elem
             top[user_id] = xp
         sorted_top = sorted(top, key=top.get, reverse=True)
-        emb = Embed().make_emb("Global top - XP", "To get xp, use commands or vote for me ([here](https://tiny.cc/voteama)).")
+        emb = Embed().make_emb("Global top - Level & XP", "To get xp, use commands or vote for me ([here](https://tiny.cc/voteama)).")
         max_range = 10
         if len(sorted_top) < max_range:
             max_range = len(sorted_top)
         for index in range(0, max_range):
             user_id = sorted_top[index]
-            xp = self.bot.funx.group_digit(top[user_id])
+            xp = top[user_id]
+            lvl = Level().from_xp(xp)
+            xp = self.bot.funx.group_digit(xp)
             if user_id == ctx.author.id:
-                text = "Author position >>> No. {}: {} - {} XP <<<"
-                emb.set_footer(text=text.format(index + 1, ctx.author.name, xp))
+                text = "Author position >>> No. {}: {} - Level {} - {} XP <<<"
+                emb.set_footer(text=text.format(index + 1, ctx.author.name, lvl, xp))
             user = self.bot.get_user(user_id)
             if user:
-                emb.add_field(name="No. {}: {}".format(index + 1, user.name), value="{} XP".format(xp))
+                emb.add_field(name=f"No. {index + 1}: {user.name}", value=f"Level {lvl} - {xp} XP")
         await ctx.send(embed=emb)
 
     @top.command()
