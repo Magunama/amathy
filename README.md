@@ -9,7 +9,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 * Python 3.6+ working environment
-* PostgreSQL 12+ database
+* PostgreSQL 12+ database ([model](utils/base/amathy.sql))
 
 All other requirements are listed in the requirements.txt file.
 
