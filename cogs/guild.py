@@ -168,7 +168,7 @@ class Server(commands.Cog):
             await ctx.send("Something went wrong! Are you sure you gave me a valid id?")
 
     @welcome.command(aliases=["msg"])
-    async def message(self, ctx, msg=None):
+    async def message(self, ctx, *, msg=None):
         """Utility|Set a welcome message.|"""
         serv_str = str(ctx.guild.id)
         joinmsg = "N/A"
