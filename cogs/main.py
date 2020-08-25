@@ -51,9 +51,10 @@ class Main(commands.Cog):
         """Utility|Vote for me, darling!~|"""
         vote_link = "https://tiny.cc/voteama"
         emb_links_perm = ctx.channel.permissions_for(ctx.me).embed_links
+        todays_rewards = f"Today's rewards: {self.bot.base_vote_coins} coins & {self.bot.base_vote_xp} XP :money_mouth:"
         if not emb_links_perm:
-            return await ctx.send(f"Vote for me here: {vote_link}")
-        emb = Embed().make_emb("Vote link", f"Vote for me and get rewards by clicking [here]({vote_link})!")
+            return await ctx.send(f"Vote for me here: {vote_link}\n{todays_rewards}")
+        emb = Embed().make_emb("Vote link", f"Vote for me and get rewards by clicking [here]({vote_link})!\n{todays_rewards}")
         await ctx.send(embed=emb)
 
     @commands.command()

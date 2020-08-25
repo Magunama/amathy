@@ -10,8 +10,9 @@ class Tasks(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.utc_diff = bot.consts["utc_diff"]
-        self.base_coins, self.base_xp = 150, 50
-        self.bot.webhook_url = self.bot.consts["dbl_webhook"]
+        self.bot.updates_webhook = self.bot.consts["updates_webhook"]
+        self.bot.api_url = self.bot.consts["api_url"]
+        self.bot.api_key = self.bot.consts["api_key"]
         self.post_gcount.start()
         self.reward_votes.start()
         self.bot_activity.start()
@@ -24,31 +25,6 @@ class Tasks(commands.Cog):
         self.bot_activity.cancel()
         self.vip_days.cancel()
         self.refill_bet.cancel()
-
-    async def send_whook(self, u_name, multi):
-        url = self.bot.webhook_url
-        pic = "https://i.imgur.com/enep9dS.png"
-        votestr = "\nTo vote, click [here](https://top.gg/bot/410488336344547338/vote)."
-        if multi > 1:
-            pic = "https://i.imgur.com/LjRefpO.png"
-        desc = "This vote gave them {} coins and {} xp.{}".format(self.base_coins*multi, self.base_xp*multi, votestr)
-        title = "{} just voted!".format(u_name)
-        obj = {
-            "embeds": [
-                {
-                    "title": title,
-                    "description": desc,
-                    "thumbnail": {
-                        "url": pic
-                    },
-                    "footer": {
-                        "text": "If you can't donate, at least vote to support us!"
-                    }
-                }
-            ]
-        }
-        async with aiohttp.ClientSession() as session:
-            await session.post(url, json=obj)
 
     def get_vip_interval(self):
         time_utc = datetime.datetime.utcnow()
@@ -84,7 +60,10 @@ class Tasks(commands.Cog):
     async def bot_activity(self):
         # todo dynamic approach
         """Changes bot's activity."""
-        games = ["ama help", "getting votes on DBL", "https://amathy.moe", "with Magu and Hrozvitnir", "quality music", "catching pokemon with Andrew"]
+        games = [
+            "ama help", "getting votes on Top.gg", "https://amathy.moe", "with Magu and Hrozvitnir", "quality music",
+            "ama vote", "Pokemon GO with Andrew", "with daily coins"
+        ]
         old_game = self.bot.guilds[0].get_member(self.bot.user.id).activity
         old_game_name = ""
         if old_game:
@@ -103,14 +82,26 @@ class Tasks(commands.Cog):
     async def reward_votes(self):
         """Reward users who voted the bot!"""
         # todo: connect queries
-        script = "select user_id, last_vote, rewards from amathy.votes where rewards>0;"
-        data = await self.bot.funx.fetch_many(script)
+        # params = {"api_key": self.bot.api_key}
+        url = f"{self.bot.api_url}/vote/{self.bot.api_key}"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:  # params
+                data = await response.json()
         for elem in data:
-            user_id, last_vote, rewards = elem
-            coins = self.base_coins * rewards
-            xp = self.base_xp * rewards
-            script = "update amathy.votes set rewards=0 where user_id='{0}';".format(user_id)
+            user_id = elem["user"]
+            last_vote = elem["dateTime"]
+            rewards = 1
+            if elem["is_Weekend"]:
+                rewards = 2
+            script = (
+                "insert into amathy.votes (user_id, monthly_votes, last_vote, total_votes) values "
+                "({0}, {1}, '{2}', {1}) on conflict (user_id) do update set monthly_votes=votes.monthly_votes+{1}, "
+                "last_vote='{2}', total_votes=votes.total_votes+{1};"
+            )
+            script = script.format(user_id, rewards, last_vote)
             await self.bot.funx.execute(script)
+            coins = self.bot.base_vote_coins * rewards
+            xp = self.bot.base_vote_xp * rewards
             script = "insert into amathy.coins (user_id, bank) values ({0}, {1}) on conflict (user_id) do update set bank=coins.bank+{1};"
             await self.bot.funx.execute(script.format(user_id, coins))
             script = "insert into amathy.stats(user_id, xp) values ({0}, {1}) on conflict (user_id) do update set xp=stats.xp+{1};"
@@ -119,9 +110,15 @@ class Tasks(commands.Cog):
             if not user:
                 user = user_id
             else:
-                text = "Thank you for your vote! You have received {} coins and {} xp. Don't forget that you can vote me every 12 hours!"
-                await user.send(text.format(coins, xp))
-            await self.send_whook(user, rewards)
+                last_vote_str = last_vote.split(".")[0]
+                last_vote_str = last_vote_str.replace("T", " ")
+                reward_text = (
+                    "Thank you for your vote received on {} (UTC+{})! "
+                    "You have been rewarded **{}** coins and **{}** xp. "
+                    "Don't forget that you can vote me every 12 hours!"
+                )
+                await user.send(reward_text.format(last_vote_str, self.utc_diff, coins, xp))
+            await self.bot.cogs["WebHook"].send_on_vote_received(user, rewards)
             print("[INFO][Task] Rewarded", user, "for", rewards, "votes!")
 
     @reward_votes.before_loop
@@ -131,7 +128,7 @@ class Tasks(commands.Cog):
 
     @tasks.loop(minutes=25)
     async def post_gcount(self):
-        """Post guildcount to discordbots.org!"""
+        """Post guildcount to Top.gg!"""
         botid = self.bot.user.id
         dbl_token = self.bot.consts["dbl_token"]
         url = f'https://discordbots.org/api/bots/{botid}/stats'

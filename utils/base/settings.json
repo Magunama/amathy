@@ -12,7 +12,8 @@
     "mc_emoji_id": 677131708922855475,
     "weeb_token": "Weeb.sh Token",
     "dbl_token": "Discordbots.org Token",
-    "dbl_webhook": "WebHook for posting vote records.",
-    "dbl_pass": "Post request check pass"
+    "updates_webhook": "WebHook for posting vote records.",
+    "api_url": "Amathy.moe API url",
+    "api_key": "Amathy.moe API token"
   }
 }

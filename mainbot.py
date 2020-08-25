@@ -133,9 +133,7 @@ async def on_guild_join(guild):
                 await k.send(jointext)
                 break
     print("On_join message successfully sent to {}".format(guild.name))
-    for oid in bot.owner_ids:
-        owner = bot.get_user(oid)
-        await owner.send("Joined new guild {} with {} members.".format(guild.name, guild.member_count))
+    await bot.cogs["WebHook"].send_on_guild_join(guild)
 
 
 @bot.event
@@ -143,9 +141,7 @@ async def on_guild_remove(guild):
     print("Left guild: ", guild.name)
     # script = "UPDATE serverlist SET `left`=\"1\" WHERE guild_id=\"{}\""
     # await bot.funx.run_cq(script.format(guild.id))
-    for oid in bot.owner_ids:
-        owner = bot.get_user(oid)
-        await owner.send("Left guild {} with {} members.".format(guild.name, guild.member_count))
+    await bot.cogs["WebHook"].send_on_guild_remove(guild)
 
 
 @bot.event
