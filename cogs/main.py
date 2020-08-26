@@ -10,7 +10,7 @@ import aiohttp
 import time
 import json
 from utils.emojis import emojis
-from utils.checks import UserCheck, GuildCheck, FileCheck
+from utils.checks import AuthorCheck, GuildCheck, FileCheck
 import os
 
 
@@ -70,7 +70,7 @@ class Main(commands.Cog):
         emb = Embed().make_emb("Invite link", f"Invite me to your guild by clicking [here]({self.bot.invite_link})!")
         await ctx.send(embed=emb)
 
-    @UserCheck.is_creator()
+    @AuthorCheck.is_creator()
     @commands.group(aliases=["module"])
     async def cog(self, ctx):
         """Creator|Operate on modules.|Creator permission"""
@@ -95,7 +95,7 @@ class Main(commands.Cog):
         self.bot.load_extension(f"cogs.{cog_name}")
         await ctx.send(f"Reloaded {cog_name}.")
 
-    @UserCheck.is_creator()
+    @AuthorCheck.is_creator()
     @commands.command()
     async def rinv(self, ctx):
         """Creator|Return a random invite link.|Creator permission"""
@@ -220,7 +220,7 @@ class Main(commands.Cog):
             emb = await self.bot.cogs["Help"].send_help(ctx.command)
             await ctx.send(embed=emb)
 
-    @UserCheck.is_creator()
+    @AuthorCheck.is_creator()
     @bot.command(aliases=["avatar"])
     async def setavatar(self, ctx, link=None):
         """Creator|Modifies Amathy's avatar.|Creator permission"""

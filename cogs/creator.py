@@ -1,12 +1,12 @@
 from discord.ext import commands
-from utils.checks import UserCheck
+from utils.checks import AuthorCheck
 
 
 class Creator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @UserCheck.is_creator()
+    @AuthorCheck.is_creator()
     @commands.group()
     async def reset(self, ctx):
         """Creator|Reset command.|Creator permission"""

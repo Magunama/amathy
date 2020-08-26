@@ -1,7 +1,7 @@
 from discord.ext import commands
 from utils.embed import Embed
 from discord.ext.commands.cooldowns import BucketType
-from utils.checks import UserCheck, GuildCheck
+from utils.checks import AuthorCheck, GuildCheck
 from utils.funx import Level
 from math import ceil
 import datetime
@@ -307,7 +307,7 @@ class Economy(commands.Cog):
                 await targ.send(text.format(val, self.mc_emoji, ctx.author))
 
     @GuildCheck.is_guild()
-    @UserCheck.is_creator()
+    @AuthorCheck.is_creator()
     @commands.group(aliases=["ac"])
     async def addcoins(self, ctx):
         """Creator|Adds coin to user.|Creator permission."""
@@ -356,7 +356,7 @@ class Economy(commands.Cog):
         await ctx.send(f"I've added {val} coins to {targ}'s bank.")
 
     @GuildCheck.is_guild()
-    @UserCheck.is_creator()
+    @AuthorCheck.is_creator()
     @commands.group(aliases=["ec"])
     async def editcoins(self, ctx):
         """Creator|Edits user's coins.|Creator permission."""

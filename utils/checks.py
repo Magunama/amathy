@@ -35,7 +35,7 @@ class FileCheck:
                 f.write(content)
 
 
-class UserCheck:
+class AuthorCheck:
     @staticmethod
     def is_vip():
         async def vip_check(ctx):

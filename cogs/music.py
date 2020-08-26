@@ -2,7 +2,7 @@ import re
 import discord
 import lavalink
 import asyncio
-from utils.checks import UserCheck
+from utils.checks import AuthorCheck
 from discord.ext import commands
 from math import ceil
 
@@ -287,7 +287,7 @@ class Music(commands.Cog):
             await player.set_pause(True)
             await ctx.send('🎧 ⏯ **| Paused** 🎧')
 
-    @UserCheck.is_vip()
+    @AuthorCheck.is_vip()
     @commands.command(aliases=['vol'])
     async def volume(self, ctx, volume: int = None):
         """Music|Changes the player's volume.(0-1000)|"""
@@ -309,7 +309,7 @@ class Music(commands.Cog):
         player.shuffle = not player.shuffle
         await ctx.send('🔀 | Shuffle ' + ('enabled' if player.shuffle else 'disabled'))
 
-    @UserCheck.is_vip()
+    @AuthorCheck.is_vip()
     @commands.command(aliases=['loop'])
     async def repeat(self, ctx):
         """Music|Repeats the current song until the command is invoked again.|"""
