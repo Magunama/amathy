@@ -77,6 +77,14 @@ async def on_command_error(ctx, error):
 
 
 @bot.event
+async def on_command_completion(ctx):
+    author = ctx.author
+    guild = ctx.guild.name
+    print(f"[INFO]{author} completed command {ctx.command} in {guild}")
+    #todo: save in db
+
+
+@bot.event
 async def on_raw_reaction_add(payload):
     # todo: optimization
     m_id = payload.message_id

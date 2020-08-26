@@ -49,32 +49,30 @@ class AuthorCheck:
 
     @staticmethod
     def is_creator():
-        async def is_creator_check(ctx):
+        async def creator_check(ctx):
             uid = ctx.message.author.id
             if uid in ctx.bot.owner_ids:
                 return True
             else:
                 await ctx.send("Creator only access!")
                 return False
-
-        return commands.check(is_creator_check)
+        return commands.check(creator_check)
 
     @staticmethod
     def is_guild_admin():
-        async def inside_check(ctx):
+        async def guild_admin_check(ctx):
             u = ctx.message.author
             if u.guild_permissions.administrator:
                 return True
             await ctx.send("No access! You need to be a server administrator to run this command.")
             return False
-
-        return commands.check(inside_check)
+        return commands.check(guild_admin_check)
 
 
 class ChannelCheck:
     @staticmethod
     def is_nsfw():
-        async def inside_check(ctx):
+        async def nsfw_check(ctx):
             if ctx.channel.is_nsfw():
                 return True
             desc = "NSFW commands can only be used in NSFW marked channels."
@@ -82,7 +80,7 @@ class ChannelCheck:
             emb.set_image(url="https://i.imgur.com/oe4iK5i.gif")
             await ctx.send(embed=emb)
             return False
-        return commands.check(inside_check)
+        return commands.check(nsfw_check)
 
 
 class GuildCheck:

@@ -588,7 +588,7 @@ class Main(commands.Cog):
         # My processes
         ret = 0
         for proc in psutil.process_iter():
-            if proc.name() in ["python3", "python3.exe", "java", "java.exe", "mysqld", "mysqld.exe"]:
+            if proc.name() in ["python3", "python3.exe", "java", "java.exe", "postgres"]:
                 ret = ret + proc.memory_info().rss
         footer = f"Amathy's memory consumption:  {self.get_size(ret)}"
 

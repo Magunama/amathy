@@ -1,5 +1,7 @@
 # Amathy
 
+[![Support Server](https://img.shields.io/discord/447310975863881738.svg?color=7289da&label=Support+server&logo=discord&style=flat-square)](https://discord.gg/D87ykxd)
+
 Amathy - a multifunctional Discord bot 
 
 ## Getting Started

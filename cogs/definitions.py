@@ -86,6 +86,9 @@ class Definitions(commands.Cog):
             await self.bot.funx.execute(script, def_name, def_body)
         except asyncpg.exceptions.UniqueViolationError:
             return f"Sorry, definition `{def_name}` already exists!"
+        except Exception as e:
+            print(e)
+            return "Sorry, something went wrong!"
         return f"Saved definition `{def_name}`."
 
     async def delete_def(self, def_name):
@@ -94,6 +97,7 @@ class Definitions(commands.Cog):
             await self.bot.funx.execute(script, def_name)
         except Exception as e:
             print(e)
+            return "Sorry, something went wrong!"
         return f"Deleted `{def_name}`."
 
     async def get_random_def(self):
@@ -105,8 +109,8 @@ class Definitions(commands.Cog):
         def_name = data["def_name"]
         return await self.get_formatted_def(def_name, data)
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
+    @commands.Cog.listener("on_message")
+    async def send_def(self, message):
         # todo: add cooldown?
         mesc = message.content.lower()
         if 0 < len(mesc) <= 20:
