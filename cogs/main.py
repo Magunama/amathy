@@ -42,9 +42,13 @@ class Main(commands.Cog):
     @commands.command()
     async def ping(self, ctx):
         """Info|Marco! Polo!|"""
-        pinger = await ctx.send('__*`Pinging...`*__')
-        ping = int(self.bot.latency * 1000)
-        await pinger.edit(content=':ping_pong: \n **Pong!** __**` {} ms`**__'.format(ping))
+        ws = round(self.bot.latency * 1000, 3)
+        first = time.perf_counter()
+        msg = await ctx.send('__*`Pinging...`*__')
+        second = time.perf_counter()
+        resp = round((second - first) * 1000, 3)
+        text = f":ping_pong: **Pong!**\nWebsocket latency: `{ws} ms`\nResponse time: `{resp} ms`"
+        await msg.edit(content=text)
 
     @commands.command()
     async def vote(self, ctx):
