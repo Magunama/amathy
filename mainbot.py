@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from utils.converters import MemberNotFound
 import itertools
 import os
 import json
@@ -65,13 +66,15 @@ async def on_command_error(ctx, error):
     error = getattr(error, 'original', error)
     if isinstance(error, ignored):
         return
-    if isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
+    elif isinstance(error, MemberNotFound):
+        await ctx.send(error.message)
+    elif isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
         cool_time = int(error.retry_after)
         cool_time = bot.funx.seconds2delta(cool_time)
         cool_time = bot.funx.delta2string(cool_time)
         cool_text = "[`{}`]\nYou are on cooldown! Try again in **{}**.".format(ctx.command.name, cool_time)
-        return await ctx.send(cool_text)
-    if hasattr(error, "__traceback__"):
+        await ctx.send(cool_text)
+    elif hasattr(error, "__traceback__"):
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
