@@ -1,16 +1,17 @@
 from discord.ext import commands
 from discord.ext.commands.cooldowns import BucketType
-from discord import AllowedMentions
 import discord
 import psutil
 import platform
 from utils.embed import Embed
+from utils.funx import BaseRequest
+from utils.converters import MemberConverter
 import random
 import aiohttp
 import time
 import json
 from utils.emojis import emojis
-from utils.checks import AuthorCheck, GuildCheck, FileCheck
+from utils.checks import AuthorCheck, FileCheck
 import os
 
 
@@ -36,7 +37,7 @@ class Main(commands.Cog):
     @commands.command()
     async def say(self, ctx, *, ret):
         """Fun|Repeats your input.|"""
-        alm = AllowedMentions(users=True, everyone=False, roles=False)
+        alm = discord.AllowedMentions(users=True, everyone=False, roles=False)
         await ctx.send(ret, allowed_mentions=alm)
 
     @commands.command()
@@ -55,10 +56,19 @@ class Main(commands.Cog):
         """Utility|Vote for me, darling!~|"""
         vote_link = "https://tiny.cc/voteama"
         emb_links_perm = ctx.channel.permissions_for(ctx.me).embed_links
-        todays_rewards = f"Today's rewards: {self.bot.base_vote_coins} coins & {self.bot.base_vote_xp} XP :money_mouth:"
+        coins, xp = self.bot.base_vote_coins, self.bot.base_vote_xp
+
+        rewards = "Today's rewards: Unknown :confused:"
+        data = await BaseRequest.get_json("https://top.gg/api/weekend")
+        if data:
+            if data["is_weekend"]:
+                coins, xp = coins * 2, xp * 2
+            rewards = f"Today's rewards: {coins} coins & {xp} XP :money_mouth:"
+
         if not emb_links_perm:
-            return await ctx.send(f"Vote for me here: {vote_link}\n{todays_rewards}")
-        emb = Embed().make_emb("Vote link", f"Vote for me and get rewards by clicking [here]({vote_link})!\n{todays_rewards}")
+            text = f"Vote for me here: {vote_link}\n{rewards}"
+            return await ctx.send(text)
+        emb = Embed().make_emb("Vote link", f"Vote for me and get rewards by clicking [here]({vote_link})!\n{rewards}")
         await ctx.send(embed=emb)
 
     @commands.command()
@@ -70,149 +80,7 @@ class Main(commands.Cog):
         emb = Embed().make_emb("Invite link", f"Invite me to your guild by clicking [here]({self.bot.invite_link})!")
         await ctx.send(embed=emb)
 
-    @AuthorCheck.is_creator()
-    @commands.group(aliases=["module"])
-    async def cog(self, ctx):
-        """Creator|Operate on modules.|Creator permission"""
-        pass
-
-    @cog.command()
-    async def load(self, ctx, cog_name):
-        """Creator|Load a module.|Creator permission"""
-        self.bot.load_extension(f"cogs.{cog_name}")
-        await ctx.send(f"Loaded {cog_name}.")
-
-    @cog.command()
-    async def unload(self, ctx, cog_name):
-        """Creator|Unload a module.|Creator permission"""
-        self.bot.unload_extension(f"cogs.{cog_name}")
-        await ctx.send(f"Unloaded {cog_name}.")
-
-    @cog.command()
-    async def reload(self, ctx, cog_name):
-        """Creator|Reload a module.|Creator permission"""
-        self.bot.unload_extension(f"cogs.{cog_name}")
-        self.bot.load_extension(f"cogs.{cog_name}")
-        await ctx.send(f"Reloaded {cog_name}.")
-
-    @AuthorCheck.is_creator()
-    @commands.command()
-    async def rinv(self, ctx):
-        """Creator|Return a random invite link.|Creator permission"""
-        k = 0
-        while True:
-            r_guild = random.choice(ctx.bot.guilds)
-            try:
-                r_guild_inv_list = await r_guild.invites()
-            except Exception as e:
-                print(e)
-                k += 1
-                if k == 5:
-                    return await ctx.send("Missing permission in 5 consecutive guilds.")
-            else:
-                if len(r_guild_inv_list) > 0:
-                    inv = random.choice(r_guild_inv_list)
-                    return await ctx.send(inv.url, delete_after=8.0)
-
-    @GuildCheck.is_guild()
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    @commands.cooldown(3, 60, BucketType.user)
-    async def purge(self, ctx, amount: int = None):
-        """Utility|Deletes a number of messages.|Administrator permission"""
-        if not amount:
-            text = "You have to enter the number of messages you want to delete."
-            return await ctx.send(text)
-        if amount >= 100:
-            amount = 100
-        await ctx.message.channel.purge(limit=amount)
-        text = "I made {} messages to disappear. Am I magic or not? :3"
-        await ctx.send(text.format(amount), delete_after=3.0)
-
-    @GuildCheck.is_guild()
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def kick(self, ctx, target=None, *, reason=None):
-        """Utility|Kicks a user.|Administrator permission"""
-
-        def check(m):
-            return m.author.id == ctx.author.id and m.channel == ctx.message.channel
-
-        if len(ctx.message.mentions) > 0:
-            user = ctx.message.mentions[0]
-        else:
-            user = self.bot.funx.search_for_member(ctx, target)
-        if not user:
-            text = "I don't know who you want me to kick!"
-            return await ctx.send(text)
-        if user == ctx.message.author:
-            text = "You can't kick yourself."
-            return await ctx.send(text)
-        if not reason:
-            reason = "Nothing"
-        reasontext = ", reason: `{}`".format(reason)
-        text = "Are you sure you want to kick `{}` for {}?\nIf yes, type `confirm`.".format(user, reasontext)
-        await ctx.send(text)
-        cf_mes = await self.bot.wait_for("message", check=check, timeout=30)
-        if cf_mes:
-            if cf_mes.content.lower() == "confirm":
-                try:
-                    await user.kick(reason=reason)
-                except Exception as e:
-                    print(e)
-                    text = "I didn't manage to kick {}, I think I don't have enough permissions!"
-                    return await ctx.send(text.format(user))
-                text = "I kicked {}."
-                await ctx.send(text.format(user))
-                guild = ctx.message.channel.guild
-                text = "You got kicked from {} by {} {}."
-                await user.send(text.format(guild, ctx.message.author.name, reasontext))
-            else:
-                text = "{} got away from the kick, *for now*."
-                await ctx.send(text.format(target))
-
-    @GuildCheck.is_guild()
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def ban(self, ctx, target=None, *, reason=None):
-        """Utility|Bans a user.|Administrator permission"""
-
-        def check(m):
-            return m.author.id == ctx.author.id and m.channel == ctx.message.channel
-
-        if len(ctx.message.mentions) > 0:
-            user = ctx.message.mentions[0]
-        else:
-            user = self.bot.funx.search_for_member(ctx, target)
-        if not user:
-            text = "I don't know who you want me to ban!"
-            return await ctx.send(text)
-        if user == ctx.message.author:
-            text = "You can't ban yourself."
-            return await ctx.send(text)
-        if not reason:
-            reason = "Nothing"
-        reasontext = ", reason: `{}`".format(reason)
-        text = "Are you sure you want to ban `{}` for `{}`?\nIf yes, type `confirm`.".format(user, reasontext)
-        await ctx.send(text)
-        cf_mes = await self.bot.wait_for("message", check=check, timeout=30)
-        if cf_mes:
-            if cf_mes.content.lower() == "confirm":
-                try:
-                    await user.ban(reason=reason, delete_message_days=3)
-                except Exception as e:
-                    print(e)
-                    text = "I didn't manage to ban {}, I think I don't have enough permissions!"
-                    return await ctx.send(text.format(user))
-                text = "I banned {}."
-                await ctx.send(text.format(user))
-                guild = ctx.message.channel.guild
-                text = "You got banned from {} by {} {}."
-                await user.send(text.format(guild, ctx.message.author.name, reasontext))
-            else:
-                text = "{} got away from the ban, *for now*."
-                await ctx.send(text.format(target))
-
+    @commands.bot_has_permissions(embed_links=True)
     @commands.group()
     async def bot(self, ctx):
         """Info|Shows info/settings about the bot.|"""
@@ -284,22 +152,20 @@ class Main(commands.Cog):
             await session.close()
         await ctx.send(resp["joke"])
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["av"])
-    async def avatar(self, ctx, *, targ=None):
+    async def avatar(self, ctx, target: MemberConverter = None):
         """Info|Returns a user's avatar.|"""
-        if not targ:
-            targ = ctx.author.id
-        user = self.bot.funx.search_for_member(ctx, targ)
-        if not user:
-            text = "Sorry, I couldn't find any user matching `{}`."
-            return await ctx.send(text.format(targ))
-        avatartext = "**👉 |** ***{} - avatar.***".format(user.name)
+        if not target:
+            target = ctx.author
+        avatartext = "**👉 |** ***{} - avatar.***".format(target.name)
         emb = Embed().make_emb("", avatartext)
-        emb.set_image(url=user.avatar_url)
+        emb.set_image(url=target.avatar_url)
         await ctx.send(embed=emb)
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["rr", "reactionrole"])
     async def reactrole(self, ctx, op=None):
         """Utility|Reaction -> Role System.|"""
@@ -509,20 +375,19 @@ class Main(commands.Cog):
             else:
                 await ctx.send("The list of ReactRoles is empty. Add one with `a rr add`.")
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
     @commands.command()
-    async def vip(self, ctx, targ=None):
+    async def vip(self, ctx, target: MemberConverter = None):
         """Info|Checks user's VIP status.|"""
-        targ = self.bot.funx.search_for_member(ctx, targ)
-        if not targ:
-            targ = ctx.message.author
+        if not target:
+            target = ctx.author
         active = "No"
-        targ_id = targ.id
+        targ_id = target.id
         vip_days = await self.bot.funx.get_vip_days(targ_id)
         if vip_days > 0:
             active = "Yes"
         embed = discord.Embed(
-            title="VIP status check for {}".format(targ),
+            title="VIP status check for {}".format(target),
             color=0x992d22,
             description="",
         )
@@ -536,6 +401,7 @@ class Main(commands.Cog):
         embed.set_footer(text=f"[Notice] VIP days go down every day after 12 PM (UTC{utc_diff_sign(self.utc_diff)}).")
         await ctx.send(embed=embed)
 
+    @commands.bot_has_permissions(attach_files=True)
     @commands.command()
     async def flip(self, ctx):
         async def dwn_img(source, savepath):
@@ -559,8 +425,9 @@ class Main(commands.Cog):
         files = [discord.File(link, 'coin.png')]
         await ctx.send(text, files=files)
 
-    @commands.command(aliases=["sys"])
+    @commands.bot_has_permissions(embed_links=True)
     @commands.cooldown(1, 8, BucketType.user)
+    @commands.command(aliases=["sys"])
     async def system(self, ctx):
         """Info|Shows system resources.|"""
         fields = []

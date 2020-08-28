@@ -1,8 +1,9 @@
 from discord.ext import commands
 from utils.embed import Embed
 from discord.ext.commands.cooldowns import BucketType
-from utils.checks import AuthorCheck, GuildCheck
+from utils.checks import AuthorCheck
 from utils.funx import Level
+from utils.converters import MemberConverter
 from math import ceil
 import datetime
 import random
@@ -149,29 +150,29 @@ class Economy(commands.Cog):
             text = "**:japanese_ogre: | {}, you still need to wait {} to receive {} (MC) again. Don't rush! >.<**"
             await ctx.send(text.format(ctx.author.mention, left, self.mc_emoji))
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
     @commands.command()
-    async def stats(self, ctx, targ=None):
+    async def stats(self, ctx, target: MemberConverter = None):
         """Info|Shows information concerning your current stats.|"""
-        targ = self.bot.funx.search_for_member(ctx, targ)
-        if not targ:
-            targ = ctx.message.author
-        joined_at = str(targ.joined_at).split('.', 1)[0]
-        created_at = str(targ.created_at).split('.', 1)[0]
-        nick = targ.name
-        if hasattr(targ, "nick"):
-            if targ.nick:
-                nick = targ.nick
+        if not target:
+            target = ctx.message.author
+        joined_at = str(target.joined_at).split('.', 1)[0]
+        created_at = str(target.created_at).split('.', 1)[0]
+        nick = target.name
+        if hasattr(target, "nick"):
+            if target.nick:
+                nick = target.nick
 
         title = f"• Nickname: {nick}"
-        desc = f"Some details about {targ.name}:"
-        author = {"name": "{} ({})".format(targ, targ.id), "icon_url": ""}
+        desc = f"Some details about {target.name}:"
+        author = {"name": "{} ({})".format(target, target.id), "icon_url": ""}
 
-        xp, gems, vip_days = await self.bot.funx.get_stats(targ.id)
+        xp, gems, vip_days = await self.bot.funx.get_stats(target.id)
         lvl = Level().from_xp(xp)
         next_xp = Level().to_xp(lvl)
         progress = f"{lvl} [{xp} XP/{next_xp} XP]"
-        pocket_coins, bank_coins = await self.bot.funx.get_coins(targ.id)
+        pocket_coins, bank_coins = await self.bot.funx.get_coins(target.id)
         total_coins = pocket_coins + bank_coins
         pocket_coins = self.bot.funx.group_digit(pocket_coins)
         bank_coins = self.bot.funx.group_digit(bank_coins)
@@ -186,7 +187,7 @@ class Economy(commands.Cog):
                   ["• Bank: ", f"{bank_coins} {self.mc_emoji}", False],
                   ["• Total: ", f"{total_coins} {self.mc_emoji}", False]]
         embed = Embed().make_emb(title, desc, author, fields)
-        embed.set_thumbnail(url=targ.avatar_url)
+        embed.set_thumbnail(url=target.avatar_url)
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["baga"])
@@ -245,19 +246,16 @@ class Economy(commands.Cog):
         text = ":money_with_wings: **| Transfer successful. :) You have withdrawn {} {} from the bank.**"
         await ctx.send(text.format(val, self.mc_emoji))
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
+    @commands.bot_has_permissions(add_reactions=True)
     @commands.command(aliases=["tf"])
-    async def transfer(self, ctx, targ=None, val=None):
+    async def transfer(self, ctx, target: MemberConverter = None, val=None):
         """Fun|Transfer coins to somebody.|"""
         # todo: add reason
-        if not (targ and val):
-            text = "**You need to enter a username and a value.**"
+        if not (target and val):
+            text = "**You need to give me a member and a value.**"
             return await ctx.send(text)
-        targ = self.bot.funx.search_for_member(ctx, targ)
-        if not targ:
-            text = "**Invalid username.**"
-            return await ctx.send(text)
-        if targ.id == ctx.author.id:
+        if target.id == ctx.author.id:
             text = "Sorry, {} you can't transfer money to yourself!"
             return await ctx.send(text.format(ctx.author.name))
         user_pocket, user_bank = await self.bot.funx.get_coins(ctx.author.id)
@@ -279,7 +277,7 @@ class Economy(commands.Cog):
         def check(reaction, user):
             return user.id == ctx.author.id and str(reaction.emoji) in ["✅", "❎"]
 
-        resp = await ctx.send("Transfer {} {} to {}?".format(val, self.mc_emoji, targ))
+        resp = await ctx.send("Transfer {} {} to {}?".format(val, self.mc_emoji, target))
         await resp.add_reaction("✅")
         await resp.add_reaction("❎")
         try:
@@ -297,16 +295,16 @@ class Economy(commands.Cog):
                 await ctx.send(text.format(ctx.author.name))
             elif str(reaction) == "✅":
                 user_bank -= val
-                targ_pocket, targ_bank = await self.bot.funx.get_coins(targ.id)
+                targ_pocket, targ_bank = await self.bot.funx.get_coins(target.id)
                 targ_bank += val
                 await self.bot.funx.save_bank(ctx.author.id, user_bank)
-                await self.bot.funx.save_bank(targ.id, targ_bank)
+                await self.bot.funx.save_bank(target.id, targ_bank)
                 text = ":euro: **| {} {} transferred successfully to {}.**"
-                await ctx.send(text.format(val, self.mc_emoji, targ))
+                await ctx.send(text.format(val, self.mc_emoji, target))
                 text = ":euro: | **Transfer notice**\nYou have received a transfer of {} {} from {}!"
-                await targ.send(text.format(val, self.mc_emoji, ctx.author))
+                await target.send(text.format(val, self.mc_emoji, ctx.author))
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
     @AuthorCheck.is_creator()
     @commands.group(aliases=["ac"])
     async def addcoins(self, ctx):
@@ -316,10 +314,9 @@ class Economy(commands.Cog):
             await ctx.send(embed=emb)
 
     @addcoins.command(name="pocket")
-    async def add_pocket(self, ctx, targ=None, val=None):
+    async def add_pocket(self, ctx, target: MemberConverter = None, val=None):
         """Creator|Adds coins to user's pocket.|Creator permission."""
-        targ = self.bot.funx.search_for_member(ctx, targ)
-        if not targ:
+        if not target:
             text = "**Invalid username.**"
             return await ctx.send(text)
         if not val:
@@ -330,16 +327,15 @@ class Economy(commands.Cog):
         else:
             text = "**What kind of values are you trying to input? :anger:**"
             return await ctx.send(text)
-        old_coins = (await self.bot.funx.get_coins(targ.id))[0]
+        old_coins = (await self.bot.funx.get_coins(target.id))[0]
         new_coins = old_coins + val
-        await self.bot.funx.save_pocket(targ.id, new_coins)
-        await ctx.send(f"I've added {val} coins to {targ}'s pocket.")
+        await self.bot.funx.save_pocket(target.id, new_coins)
+        await ctx.send(f"I've added {val} coins to {target}'s pocket.")
 
     @addcoins.command(name="bank")
-    async def add_bank(self, ctx, targ=None, val=None):
+    async def add_bank(self, ctx, target: MemberConverter = None, val=None):
         """Creator|Add coins to user's bank.|Creator permission."""
-        targ = self.bot.funx.search_for_member(ctx, targ)
-        if not targ:
+        if not target:
             text = "**Invalid username.**"
             return await ctx.send(text)
         if not val:
@@ -350,12 +346,12 @@ class Economy(commands.Cog):
         else:
             text = "**What kind of values are you trying to input? :anger:**"
             return await ctx.send(text)
-        old_coins = (await self.bot.funx.get_coins(targ.id))[1]
+        old_coins = (await self.bot.funx.get_coins(target.id))[1]
         new_coins = old_coins + val
-        await self.bot.funx.save_bank(targ.id, new_coins)
-        await ctx.send(f"I've added {val} coins to {targ}'s bank.")
+        await self.bot.funx.save_bank(target.id, new_coins)
+        await ctx.send(f"I've added {val} coins to {target}'s bank.")
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
     @AuthorCheck.is_creator()
     @commands.group(aliases=["ec"])
     async def editcoins(self, ctx):
@@ -365,10 +361,9 @@ class Economy(commands.Cog):
             await ctx.send(embed=emb)
 
     @editcoins.command(name="pocket")
-    async def edit_pocket(self, ctx, targ=None, val=None):
+    async def edit_pocket(self, ctx, target: MemberConverter = None, val=None):
         """Creator|Edits user's pocket coins.|Creator permission."""
-        targ = self.bot.funx.search_for_member(ctx, targ)
-        if not targ:
+        if not target:
             text = "**Invalid username.**"
             return await ctx.send(text)
         if not val:
@@ -379,14 +374,13 @@ class Economy(commands.Cog):
         else:
             text = "**What kind of values are you trying to input? :anger:**"
             return await ctx.send(text)
-        await self.bot.funx.save_pocket(targ.id, val)
-        await ctx.send(f"I've edited {targ}'s pocket coins to {val}.")
+        await self.bot.funx.save_pocket(target.id, val)
+        await ctx.send(f"I've edited {target}'s pocket coins to {val}.")
 
     @editcoins.command(name="bank")
-    async def edit_bank(self, ctx, targ=None, val=None):
+    async def edit_bank(self, ctx, target: MemberConverter = None, val=None):
         """Creator|Edits user's bank coins.|Creator permission."""
-        targ = self.bot.funx.search_for_member(ctx, targ)
-        if not targ:
+        if not target:
             text = "**Invalid username.**"
             return await ctx.send(text)
         if not val:
@@ -397,9 +391,10 @@ class Economy(commands.Cog):
         else:
             text = "**What kind of values are you trying to input? :anger:**"
             return await ctx.send(text)
-        await self.bot.funx.save_bank(targ.id, val)
-        await ctx.send(f"I've edited {targ}'s bank coins to {val}.")
+        await self.bot.funx.save_bank(target.id, val)
+        await ctx.send(f"I've edited {target}'s bank coins to {val}.")
 
+    @commands.bot_has_permissions(embed_links=True)
     @commands.group()
     async def top(self, ctx):
         """Info|Shows the top 10 users in different categories.|"""
@@ -491,11 +486,12 @@ class Economy(commands.Cog):
             embeds.append(emb)
         await self.bot.funx.embed_menu(ctx, embeds)
 
+    @commands.bot_has_permissions(add_reactions=True)
     @commands.command()
-    async def buy(self, ctx, item, quantity="1"):
+    async def buy(self, ctx, item=None, quantity="1"):
         """Fun|Buy an item from the shop.|"""
         if not item:
-            pass
+            await ctx.send("Name the item you want to buy. (`a shop`)")
         item = item.lower()
         found = None
         for it in self.shop:
@@ -506,18 +502,18 @@ class Economy(commands.Cog):
             return await ctx.send(f"The item {item} can't be found in the shop. :confused: Maybe you missed something?")
         await self.buy_item(ctx, found, quantity)
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["bag"])
-    async def inventory(self, ctx, targ=None):
+    async def inventory(self, ctx, target: MemberConverter = None):
         """Fun|See your items.|"""
-        targ = self.bot.funx.search_for_member(ctx, targ)
-        if not targ:
-            targ = ctx.message.author
-        inventory = await self.bot.funx.get_inventory(targ.id)
-        if targ == ctx.author:
+        if not target:
+            target = ctx.message.author
+        inventory = await self.bot.funx.get_inventory(target.id)
+        if target == ctx.author:
             embed = Embed().make_emb("[Inventory]", "These are **your** items:")
         else:
-            embed = Embed().make_emb("[Inventory]", f"These are **{targ}**'s items:")
+            embed = Embed().make_emb("[Inventory]", f"These are **{target}**'s items:")
 
         for item in inventory:
             quantity = f"{inventory[item]} units"
@@ -525,6 +521,7 @@ class Economy(commands.Cog):
         # embed.set_footer("Page 1/1 - To find out more about an item, use ama iteminfo <item_name>.")
         await ctx.send(embed=embed)
 
+    @commands.bot_has_permissions(embed_links=True)
     @commands.command()
     async def shop(self, ctx):
         """Fun|See the shop. Buy or leave?|"""
@@ -654,6 +651,7 @@ class Economy(commands.Cog):
 
         await ctx.send(main_text)
 
+    @commands.bot_has_permissions(embed_links=True)
     @commands.command()
     async def wheel(self, ctx, bet_sum=None):
         """Fun|Spin the Wheel of Fate!|"""

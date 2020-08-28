@@ -3,7 +3,6 @@ import aiohttp
 import discord
 from discord.ext.commands.cooldowns import BucketType
 from discord.ext import commands
-from utils.checks import ChannelCheck
 
 
 # ###################### gud ol' giphy
@@ -52,8 +51,16 @@ class Reacts(commands.Cog):
         cats = data["types"]
         return ", ".join(cats)
 
-    @commands.command()
+    async def cog_before_invoke(self, ctx):
+        """Since most commands in this cog require certain perms, we might as well check it only once"""
+        perms = ctx.channel.permissions_for(ctx.me)
+        if not perms.embed_links:
+            raise commands.MissingPermissions(["embed_links"])
+        if not perms.attach_files:
+            raise commands.MissingPermissions(["attach_files"])
+
     @commands.cooldown(3, 8, BucketType.user)
+    @commands.command()
     async def punch(self, ctx, target=None):
         """Media|Punch your friends/enemies!|"""
         ret = "Here's a punch for you, {}!".format(ctx.message.author.mention)
@@ -61,8 +68,8 @@ class Reacts(commands.Cog):
             ret = "{0} gets punched by {1}!**".format(target, ctx.message.author.mention)
         await ctx.send(embed=(await self.weeb_power("punch", ret)))
 
-    @commands.command()
     @commands.cooldown(3, 8, BucketType.user)
+    @commands.command()
     async def grope(self, ctx, target=None):
         """Media|Grope your senpai/waifu!|"""
         ret = f"Get groped, {ctx.author.mention}!"
@@ -280,19 +287,19 @@ class Reacts(commands.Cog):
         embed.set_image(url=nekos['neko'])
         await ctx.send(embed=embed)
 
-    @ChannelCheck.is_nsfw()
-    @commands.command()
-    @commands.cooldown(3, 8, BucketType.user)
-    async def porn(self, context):
-        """Explicit|Porn - consume it with pleasure!|"""
-        link = "https://animevibe.ro/api/porn/pornvibe({}).gif"
-        author = context.message.author.mention
-        hentai = "**{0} onii-chan, here!**"
-        choice = random.randint(1, 197)
-        embed = discord.Embed(description=hentai.format(author), colour=discord.Colour.purple())
-        embed.set_footer(text="Amathy | PornVibe Api V 0.2 | https://patreon.com/amathy/")
-        embed.set_image(url=link.format(choice))
-        await context.send(embed=embed)
+    # @commands.is_nsfw()
+    # @commands.cooldown(3, 8, BucketType.user)
+    # @commands.command()
+    # async def porn(self, context):
+    #     """Explicit|Porn - consume it with pleasure!|"""
+    #     link = "https://animevibe.ro/api/porn/pornvibe({}).gif"
+    #     author = context.message.author.mention
+    #     hentai = "**{0} onii-chan, here!**"
+    #     choice = random.randint(1, 197)
+    #     embed = discord.Embed(description=hentai.format(author), colour=discord.Colour.purple())
+    #     embed.set_footer(text="Amathy | PornVibe Api V 0.2 | https://patreon.com/amathy/")
+    #     embed.set_image(url=link.format(choice))
+    #     await context.send(embed=embed)
 
     @commands.command(aliases=["bang"])
     @commands.cooldown(3, 8, BucketType.user)
@@ -495,9 +502,9 @@ class Reacts(commands.Cog):
         em = discord.Embed()
         await ctx.send(content=ctx.message.author.mention, embed=em.set_image(url=res))
 
-    @commands.command()
-    @ChannelCheck.is_nsfw()
+    @commands.is_nsfw()
     @commands.cooldown(3, 8, BucketType.user)
+    @commands.command()
     async def hentai(self, context):
         """Explicit|Hentai and chill with your senpai/waifu!|"""
         author = context.message.author.mention

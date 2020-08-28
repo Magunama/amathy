@@ -1,7 +1,6 @@
 from discord.ext import commands
 import os
 from shutil import copyfile
-import discord
 
 
 class FileCheck:
@@ -58,37 +57,10 @@ class AuthorCheck:
                 return False
         return commands.check(creator_check)
 
-    @staticmethod
-    def is_guild_admin():
-        async def guild_admin_check(ctx):
-            u = ctx.message.author
-            if u.guild_permissions.administrator:
-                return True
-            await ctx.send("No access! You need to be a server administrator to run this command.")
-            return False
-        return commands.check(guild_admin_check)
-
 
 class ChannelCheck:
-    @staticmethod
-    def is_nsfw():
-        async def nsfw_check(ctx):
-            if ctx.channel.is_nsfw():
-                return True
-            desc = "NSFW commands can only be used in NSFW marked channels."
-            emb = discord.Embed(title="You can't use this here!", description=desc)
-            emb.set_image(url="https://i.imgur.com/oe4iK5i.gif")
-            await ctx.send(embed=emb)
-            return False
-        return commands.check(nsfw_check)
+    pass
 
 
 class GuildCheck:
-    @staticmethod
-    def is_guild():
-        async def guild_check(ctx):
-            if ctx.guild:
-                return True
-            await ctx.send("Sorry, this command can only be used in a guild!")
-            return False
-        return commands.check(guild_check)
+    pass

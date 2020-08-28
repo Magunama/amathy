@@ -92,19 +92,6 @@ class Funx:
         return ret
 
     @staticmethod
-    def get_member_named(server, param):
-        member = discord.utils.find(lambda m: param in m.name.lower(), server.members)
-        if not member:
-            member = discord.utils.find(lambda m: param in m.nick.lower() if m.nick is not None else False, server.members)
-        if not member:
-            member = discord.utils.find(lambda m: param in str(m).lower(), server.members)
-        return member
-
-    @staticmethod
-    def get_member_by_id(server, param):
-        return server.get_member(param)
-
-    @staticmethod
     def search_for_text_channel(ctx, targ):
         if targ.isdigit():
             targ = ctx.guild.get_channel(int(targ))
@@ -131,16 +118,6 @@ class Funx:
             else:
                 targ = discord.utils.find(lambda c: targ in c.name, ctx.guild.channels)
         return targ
-
-    def search_for_member(self, ctx, targ):
-        # todo: recheck function
-        server = ctx.guild
-        user = None
-        if len(ctx.message.mentions) > 0:
-            return ctx.message.mentions[0]
-        if targ:
-                user = self.get_member_by_id(server, targ) or self.get_member_named(server, targ.lower())
-        return user
 
     def seconds2string(self, seconds, lang="en"):
         return self.delta2string(datetime.timedelta(seconds=seconds), lang)

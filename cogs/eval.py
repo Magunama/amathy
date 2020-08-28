@@ -12,6 +12,7 @@ class Eval(commands.Cog):
         self.bot = bot
 
     @AuthorCheck.is_creator()
+    @commands.bot_has_permissions(add_reactions=True)
     @commands.command(name='eval', aliases=["e"])
     async def _eval(self, ctx, *, body):
         """Creator|Evaluates python code|Creator permission"""

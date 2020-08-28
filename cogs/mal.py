@@ -14,6 +14,7 @@ class MAL(commands.Cog):
             async with session.get(url, params=params) as response:
                 return await response.json()
 
+    @commands.bot_has_permissions(embed_links=True)
     @commands.group()
     async def mal(self, ctx):
         """Info|Get information from MyAnimeList.|"""

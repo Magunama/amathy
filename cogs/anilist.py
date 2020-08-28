@@ -992,6 +992,7 @@ class Anime(commands.Cog):
                 return await ctx.send(embed=self.not_found_embed(title))
             await self.bot.funx.embed_menu(ctx=ctx, emb_list=embeds, message=None, page=0)
 
+    @commands.bot_has_permissions(embed_links=True)
     @commands.group(aliases=["ani", "anichart"])
     async def anilist(self, ctx, *, query=None):
         """Info|Get information from AniList.

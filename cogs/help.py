@@ -99,6 +99,7 @@ class Help(commands.Cog):
         embed = Embed().make_emb(title, desc, footer=footer)
         await ctx.send(embed=embed)
 
+    @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["h"])
     async def help(self, ctx, args=None):
         """Info|Shows the help page.|"""

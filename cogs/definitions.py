@@ -1,6 +1,6 @@
 from discord.ext import commands
 from utils.embed import Embed
-from utils.checks import GuildCheck
+from utils.converters import MemberConverter
 import datetime
 import asyncpg
 import random
@@ -113,7 +113,7 @@ class Definitions(commands.Cog):
     async def send_def(self, message):
         # todo: add cooldown?
         mesc = message.content.lower()
-        if 0 < len(mesc) <= 20:
+        if 0 < len(mesc) <= 25:
             chan = message.channel
             if hasattr(chan, "guild"):
                 def_found = await self.get_short_def(mesc, chan.guild.id)
@@ -135,7 +135,7 @@ class Definitions(commands.Cog):
             text = f"No definition found for `{def_name}`. :slight_frown:"
             await ctx.send(text)
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
     @commands.command(aliases=["dset"])
     async def defset(self, ctx, def_string=None):
         """Fun|Add a local/global definition, depending on your VIP status.|"""
@@ -147,8 +147,8 @@ class Definitions(commands.Cog):
             return await ctx.send(text)
         def_name, def_body = def_string.split("::")
         def_name = def_name.lower()
-        if not 0 < len(def_name) <= 20:
-            text = "The definition name must have between 1 and 20 characters!"
+        if not 0 < len(def_name) <= 25:
+            text = "The definition name must have between 1 and 25 characters!"
             return await ctx.send(text)
         if not 0 < len(def_body):
             text = "The definition body must not be empty!"
@@ -178,14 +178,14 @@ class Definitions(commands.Cog):
                     ret = "Unknown definition type! Try again?"
                 await ctx.send(ret)
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
     @commands.command(aliases=["ddel"])
     async def defdel(self, ctx, def_name=None):
         """Fun|Remove a definition.|"""
         if not def_name:
             text = "Enter the name of the definition you want to delete."
             return await ctx.send(text)
-        if not 0 < len(def_name) <= 20:
+        if not 0 < len(def_name) <= 25:
             text = "The definition name must have between 1 and 20 characters!"
             return await ctx.send(text)
 
@@ -218,20 +218,17 @@ class Definitions(commands.Cog):
                     ret = "Invalid confirmation! Try again?"
                 await ctx.send(ret)
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True, add_reactions=True)
     @commands.command(aliases=["dlist"])
-    async def deflist(self, ctx, targ=None):
+    async def deflist(self, ctx, target: MemberConverter = None):
         """Fun|Read someone's definitions.|"""
-        if not targ:
-            text = "**You need to enter a (partial) username or an id.**"
+        if not target:
+            text = "**You need to give me a member.**"
             return await ctx.send(text)
-        targ = self.bot.funx.search_for_member(ctx, targ)
-        if not targ:
-            text = "**Invalid username or id.**"
-            return await ctx.send(text)
-        embeds = await self.get_defs_by_author(targ)
+        embeds = await self.get_defs_by_author(target)
         if not embeds:
-            await ctx.send(f"No definitions found for user {targ.name}.")
+            return await ctx.send(f"No definitions found for user {target.name}.")
         await self.bot.funx.embed_menu(ctx, embeds)
 
     @commands.command(aliases=["rdef"])

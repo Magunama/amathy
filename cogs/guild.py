@@ -1,4 +1,4 @@
-from utils.checks import FileCheck, GuildCheck
+from utils.checks import FileCheck
 from discord.ext import commands
 import discord
 from utils.embed import Embed
@@ -61,7 +61,8 @@ class Server(commands.Cog):
             except discord.errors.Forbidden:
                 pass
 
-    @GuildCheck.is_guild()
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
     @commands.group(aliases=["guild"])
     async def server(self, ctx):
         """Utility|Shows server info/settings.|"""
@@ -126,9 +127,9 @@ class Server(commands.Cog):
             string.append("{} - {}".format(nama, idu))
         await ctx.send("\n".join(string))
 
-    @GuildCheck.is_guild()
-    @commands.group()
+    @commands.guild_only()
     @commands.has_permissions(administrator=True)
+    @commands.group()
     async def welcome(self, ctx):
         """Utility|Welcome Role/Message|Administrator permission."""
         if ctx.invoked_subcommand is None:

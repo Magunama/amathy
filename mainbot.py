@@ -28,12 +28,12 @@ def attach_cogs(bot):
             except discord.ext.commands.errors.ExtensionAlreadyLoaded:
                 return
             except Exception as e:
-                print()
-                print(f"[ERR] Failed to load extension {extension}. Reason: {e}")
+                print(f"\n[ERR] Failed to load extension {extension}. Reason: {e}")
 
 
 bot = commands.AutoShardedBot(command_prefix=get_prefix, fetch_offline_members=False, max_messages=1000, case_insensitive=True)
 bot.remove_command('help')
+bot.commands_statistics = dict()
 
 
 @bot.event
@@ -43,8 +43,7 @@ async def on_ready():
     bot.invite_link = "https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=2117463255".format(bot.user.id)
     print("Loaded plugins: ", end="")
     attach_cogs(bot)
-    print()
-    print(">>> Ready to play!")
+    print("\n>>> Ready to play!")
 
 
 @bot.event
@@ -62,21 +61,52 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     if hasattr(ctx.command, 'on_error'):
         return
+
+    # todo: recheck as this method might be wrong
     ignored = (commands.CommandNotFound, commands.CheckFailure)
     error = getattr(error, 'original', error)
-    if isinstance(error, ignored):
+    if type(error) in ignored:
         return
+
+    # checking for guild field
+    elif isinstance(error, commands.NoPrivateMessage):
+        await ctx.send("Sorry, this command can only be used in a guild!")
+
+    # checking for missing permissions
+    elif isinstance(error, commands.MissingPermissions):
+        missing = ", ".join(error.missing_perms)
+        await ctx.send(f"Sorry, you can't use this command as you're missing the following permissions:\n`{missing}`.")
+    elif isinstance(error, commands.BotMissingPermissions):
+        missing = ", ".join(error.missing_perms)
+        await ctx.send(f"Sorry, it seems I'm missing the following permissions for this command:\n`{missing}`.")
+
+    # checking for errors from converters
     elif isinstance(error, MemberNotFound):
         await ctx.send(error.message)
-    elif isinstance(error, discord.ext.commands.errors.CommandOnCooldown):
+
+    # checking for nsfw marked channel
+    elif isinstance(error, commands.NSFWChannelRequired):
+        desc = "NSFW commands can only be used in NSFW marked channels."
+        emb = discord.Embed(title="You can't use this here!", description=desc)
+        emb.set_image(url="https://i.imgur.com/oe4iK5i.gif")
+        await ctx.send(embed=emb)
+
+    # checking for commands on cooldown
+    elif isinstance(error, commands.CommandOnCooldown):
         cool_time = int(error.retry_after)
         cool_time = bot.funx.seconds2delta(cool_time)
         cool_time = bot.funx.delta2string(cool_time)
         cool_text = "[`{}`]\nYou are on cooldown! Try again in **{}**.".format(ctx.command.name, cool_time)
         await ctx.send(cool_text)
+
+    # checking for unexpected errors
     elif hasattr(error, "__traceback__"):
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
+    if "errored" not in bot.commands_statistics:
+        bot.commands_statistics["errored"] = 0
+    bot.commands_statistics["errored"] += 1
 
 
 @bot.event
@@ -84,7 +114,11 @@ async def on_command_completion(ctx):
     author = ctx.author
     guild = ctx.guild.name
     print(f"[INFO]{author} completed command {ctx.command} in {guild}")
-    #todo: save in db
+
+    # todo: save in db
+    if "completed" not in bot.commands_statistics:
+        bot.commands_statistics["completed"] = 0
+    bot.commands_statistics["completed"] += 1
 
 
 @bot.event

@@ -1,5 +1,4 @@
 from discord.ext import commands
-from utils.checks import GuildCheck
 from utils.embed import Embed
 
 
@@ -79,8 +78,8 @@ class Events(commands.Cog):
         footer = "To see details about a certain event, use ama event list [event]."
         return Embed().make_emb(title="Guild events", desc="", fields=fields, footer=footer)
 
+    @commands.guild_only()
     @commands.has_permissions(administrator=True)
-    @GuildCheck.is_guild()
     @commands.group(aliases=["ev", "events"])
     async def event(self, ctx):
         """Utility|Manage events in your guild.|Administrator permission"""
@@ -88,6 +87,7 @@ class Events(commands.Cog):
             emb = await self.bot.cogs["Help"].send_help(ctx.command)
             await ctx.send(embed=emb)
 
+    @commands.bot_has_permissions(embed_links=True)
     @event.command(aliases=["show"])
     async def list(self, ctx, ev_name=None):
         """Utility|Lists events in your guild.|"""
