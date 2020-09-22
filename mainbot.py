@@ -112,7 +112,9 @@ async def on_command_error(ctx, error):
 @bot.event
 async def on_command_completion(ctx):
     author = ctx.author
-    guild = ctx.guild.name
+    guild = ctx.guild
+    if not guild:
+        guild = "DM"
     print(f"[INFO]{author} completed command {ctx.command} in {guild}")
 
     # todo: save in db

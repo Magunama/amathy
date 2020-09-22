@@ -121,17 +121,28 @@ class Main(commands.Cog):
         timediff = int(time.time() - self.bot.funx.launch_time)
         uptime_str = self.bot.funx.seconds2string(timediff, "en")
         embed.add_field(name="Uptime", value=uptime_str, inline=True)
-        total_players = 0
-        playing_players = 0
-        data = self.bot.lavalink.player_manager.players
-        for k in data:
-            player = data[k]
-            if player.is_connected:
-                total_players += 1
-            if player.is_playing:
-                playing_players += 1
-        music = "```Playing music in {} guilds\nWaiting to play in {} guilds```".format(playing_players, total_players - playing_players)
-        embed.add_field(name="Music stats", value=music, inline=True)
+
+        if hasattr(self.bot, "wavelink"):
+            active_players = 0
+            paused_players = 0
+            waiting_players = 0
+            players = self.bot.wavelink.players
+            for gid in players:
+                player = players[gid]
+                if player.is_playing:
+                    if player.is_paused:
+                        paused_players += 1
+                    else:
+                        active_players += 1
+                if player.waiting:
+                    waiting_players += 1
+            music_stats = f"""
+                ```Active players: {active_players}\nPaused players: {paused_players}\nWaiting players: {waiting_players}```
+            """
+            embed.add_field(name="Music stats", value=music_stats, inline=False)
+        else:
+            embed.add_field(name="Music stats", value="Unavailable", inline=True)
+
         website = "https://amathy.moe"
         supp_server = "https://discord.gg/D87ykxd"
         vote = "https://discordbots.org/bot/410488336344547338/vote"

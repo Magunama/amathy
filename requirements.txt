@@ -4,3 +4,5 @@ discord.py[voice]
 psutil
 lavalink
 Pillow
+spotipy
+git+https://github.com/Rapptz/discord-ext-menus

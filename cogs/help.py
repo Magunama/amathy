@@ -54,6 +54,8 @@ class Help(commands.Cog):
     async def cat_page(self, ctx, cat):
         showlist = []
         for c in ctx.bot.commands:
+            if c.hidden:
+                continue
             help_str = c.help
             if help_str:
                 if "|" in help_str:

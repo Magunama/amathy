@@ -47,6 +47,20 @@ class AuthorCheck:
         return commands.check(vip_check)
 
     @staticmethod
+    def is_privileged():
+        async def privileged_check(ctx):
+            if ctx.bot:
+                vip_days = await ctx.bot.funx.get_vip_days(ctx.author.id)
+                if vip_days > 0:
+                    return True
+            admin_chk = ctx.author.permissions_in(ctx.channel).administrator
+            if admin_chk:
+                return True
+            await ctx.send("Sorry, only VIP users & guild administrators can use this command!")
+            return False
+        return commands.check(privileged_check)
+
+    @staticmethod
     def is_creator():
         async def creator_check(ctx):
             uid = ctx.message.author.id

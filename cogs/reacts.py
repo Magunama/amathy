@@ -24,7 +24,7 @@ class Reacts(commands.Cog):
     async def weeb_power(self, r_type, ret):
         params = {"type": r_type, "hidden": "false"}
         headers = {"User-Agent": "Amathy/1.8", "Authorization": "Wolke {}".format(self.wolke)}
-        url = "https://api-v2.weeb.sh/images/random"
+        url = "https://api.weeb.sh/images/random"
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url, params=params) as response:
                 data = await response.json()
