@@ -2,7 +2,7 @@ asyncio
 asyncpg
 discord.py[voice]
 psutil
-lavalink
+Wavelink
 Pillow
 spotipy
 git+https://github.com/Rapptz/discord-ext-menus

@@ -462,6 +462,11 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         if channel is None:
             raise NoChannelProvided
 
+        permissions = channel.permissions_for(ctx.me)
+
+        if not permissions.connect or not permissions.speak:  # Check user limit too?
+            return await ctx.send("I need the `CONNECT` and `SPEAK` permissions.")
+
         await player.connect(channel.id)
 
     @commands.command(aliases=["p"])
