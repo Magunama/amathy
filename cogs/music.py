@@ -171,6 +171,7 @@ class Player(wavelink.Player):
 
     async def teardown(self):
         """Clear internal states, remove player controller and disconnect."""
+        self.context = None
         if self.controller:
             try:
                 await self.controller.message.delete()
@@ -832,10 +833,11 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
             option = int(option)
             if 1 <= option <= 10:
                 await ctx.invoke(self.connect)
-                track = tracks[option]
+                track = tracks[option-1]
                 track = Track(track.id, track.info, requester=ctx.author)
                 await player.queue.put(track)
                 await player.do_next()
+                await ctx.send(f'```ini\nAdded {track.title} to the queue\n```', delete_after=8)
 
 
 def setup(bot: commands.Bot):
