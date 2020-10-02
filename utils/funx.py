@@ -193,6 +193,16 @@ class Funx:
             return 0
         return inventory[item_name]
 
+    async def get_prefix(self, guild_id):
+        script = f"select prefix from amathy.guilds where guild_id={guild_id}"
+        data = await self.bot.funx.fetch_one(script)
+        if not data:
+            return None
+        prefix = data["prefix"]
+        if not prefix:
+            return None
+        return prefix
+
     @staticmethod
     def inventory_add(inventory, item_name, quantity=1):
         if item_name not in inventory:
@@ -248,6 +258,11 @@ class Funx:
     async def save_timer(self, uid, cat, val):
         val = val.strftime(self.date_format)
         script = f"insert into amathy.timers (user_id, {cat}) values ({uid}, '{val}') on conflict (user_id) do update set {cat}='{val}'"
+        await self.execute(script)
+
+    async def set_prefix(self, guild_id, val):
+        script = f"insert into amathy.guilds (guild_id, prefix) values ({guild_id}, '{val}') " \
+                 f"on conflict (guild_id) do update set prefix='{val}'"
         await self.execute(script)
 
     async def embed_menu(self, ctx, emb_list: list, message=None, page=0, timeout=30):

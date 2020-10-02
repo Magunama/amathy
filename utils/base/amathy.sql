@@ -50,6 +50,17 @@ create table if not exists amathy.disabled_events
 create unique index if not exists table_name_guild_id_uindex
     on amathy.disabled_events (guild_id);
 
+create table if not exists amathy.guilds
+(
+    guild_id numeric(18) not null
+        constraint guilds_pk
+            primary key,
+    prefix   text
+);
+
+create unique index if not exists guilds_guild_id_uindex
+    on amathy.guilds (guild_id);
+
 create table if not exists amathy.hentai
 (
     id   serial not null

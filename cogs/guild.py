@@ -1,5 +1,6 @@
 from utils.checks import FileCheck
 from discord.ext import commands
+from discord.ext.commands.cooldowns import BucketType
 import discord
 from utils.embed import Embed
 import random
@@ -191,6 +192,22 @@ class Server(commands.Cog):
         with open(self.wmessage_path, 'w') as fp:
             json.dump(self.welcome_messages, fp, indent=4)
         await ctx.send("I will now send the welcome message to new members, {}!".format(ctx.author.name))
+
+    @commands.guild_only()
+    @commands.has_permissions(administrator=True)
+    @commands.command()
+    @commands.cooldown(1, 10, BucketType.guild)
+    async def prefix(self, ctx, prefix=None):
+        """Utility|Shows the prefix of the server or sets a new one|Administrator permission"""
+        if not prefix:
+            prefix = await self.bot.funx.get_prefix(ctx.guild.id)
+            if not prefix:
+                prefix = "/ ".join(self.bot.prefixes)
+            return await ctx.send("The prefix of this server is `{}`".format(prefix))
+        if len(prefix) > 3:
+            return await ctx.send("The prefix cannot be longer than 3 characters!")
+        await self.bot.funx.set_prefix(ctx.guild.id, prefix)
+        await ctx.send("The prefix on this server is now `{}`".format(prefix))
 
 
 def setup(bot):
