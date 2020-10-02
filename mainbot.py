@@ -7,10 +7,12 @@ import json
 import sys, traceback
 
 
-def get_prefix(bot, message):
-    fullpref = list()
-    for k in bot.prefixes:
-        fullpref.extend(map(''.join, itertools.product(*zip(k.upper(), k.lower()))))
+async def get_prefix(bot, message):
+    fullpref = bot.fullpref
+    if message.guild:
+        prefix = await bot.funx.get_prefix(message.guild.id)
+        if prefix:
+            fullpref.extend(map(''.join, itertools.product(*zip(prefix.upper(), prefix.lower()))))
     return commands.when_mentioned_or(*fullpref)(bot, message)
 
 
