@@ -1,19 +1,23 @@
 import discord
 from discord.ext import commands
+
 from utils.converters import MemberNotFound
-import itertools
 import os
 import json
-import sys, traceback
+import sys
+import traceback
+import re
 
 
 async def get_prefix(bot, message):
-    fullpref = bot.fullpref
+    for p in bot.prefixes:
+        if bool(re.match(p, message.content, re.I)):
+            return message.content[:len(p)]
     if message.guild:
-        prefix = await bot.funx.get_prefix(message.guild.id)
-        if prefix:
-            fullpref.extend(map(''.join, itertools.product(*zip(prefix.upper(), prefix.lower()))))
-    return commands.when_mentioned_or(*fullpref)(bot, message)
+        custom_prefix = await bot.funx.get_prefix(message.guild.id)
+        if custom_prefix and re.match(custom_prefix, message.content, re.I):
+            return message.content[:len(custom_prefix)]
+    return commands.when_mentioned(bot, message)
 
 
 def attach_cogs(bot):
