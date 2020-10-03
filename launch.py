@@ -27,10 +27,6 @@ async def start_bot():
     bot.owner_ids = set(setts["owner_ids"])
     bot.consts = setts["constants"]
     bot.prefixes = setts["prefixes"]
-    bot.fullpref = list()
-
-    for k in bot.prefixes:
-        bot.fullpref.extend(map(''.join, itertools.product(*zip(k.upper(), k.lower()))))
 
     db = await asyncpg.create_pool(host=db_ip, user=db_user, password=db_pass, database=db_name)
     bot.pool = db
