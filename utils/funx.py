@@ -19,6 +19,12 @@ class BaseRequest:
             async with session.get(url, params=params) as response:
                 return await response.json()
 
+    @staticmethod
+    async def get_text(url, headers=None, params=None):
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url, params=params) as response:
+                return await response.text()
+
 
 class Level:
     base_xp = 250
