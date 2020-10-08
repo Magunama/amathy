@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-
 from utils.converters import MemberNotFound
 import os
 import json
@@ -37,7 +36,10 @@ def attach_cogs(bot):
                 print(f"\n[ERR] Failed to load extension {extension}. Reason: {e}")
 
 
-bot = commands.AutoShardedBot(command_prefix=get_prefix, fetch_offline_members=False, max_messages=1000, case_insensitive=True)
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.AutoShardedBot(command_prefix=get_prefix, intents=intents, chunk_guilds_at_startup=False,
+                              fetch_offline_members=False, max_messages=1000, case_insensitive=True)
 bot.remove_command('help')
 bot.commands_statistics = dict()
 

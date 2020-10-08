@@ -107,17 +107,18 @@ class Main(commands.Cog):
     @bot.command(aliases=["stats"])
     async def info(self, ctx):
         """Info|Returns some information about the bot.|"""
-        embed = discord.Embed(title="About Amathy:")
-        embed.set_author(name="Amathy v1.8")
+        embed = discord.Embed(title="About Amathy")
+        embed.set_author(name=self.bot.user, icon_url=self.bot.user.avatar_url)
         embed.set_thumbnail(url=self.bot.user.avatar_url)
-        creatorids = self.bot.owner_ids
+        embed.add_field(name="Library", value="Discord.py", inline=True)
+        self.field = embed.add_field(name="Library version", value=discord.__version__)
         creator_string = "```"
-        for k in creatorids:
-            user_obj = self.bot.get_user(k)
-            creator_string += "\n{}".format(user_obj)
+        for uid in self.bot.owner_ids:
+            user_obj = self.bot.get_user(uid)
+            creator_string += f"\n{user_obj}"
         creator_string += "```"
         embed.add_field(name="Creators", value=creator_string, inline=False)
-        embed.add_field(name="Server count", value=str(len(self.bot.guilds)), inline=True)
+        embed.add_field(name="Guild count", value=str(len(self.bot.guilds)), inline=True)
         timediff = int(time.time() - self.bot.funx.launch_time)
         uptime_str = self.bot.funx.seconds2string(timediff, "en")
         embed.add_field(name="Uptime", value=uptime_str, inline=True)

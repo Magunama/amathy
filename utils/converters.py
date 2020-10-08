@@ -12,6 +12,16 @@ class MemberConverter(commands.Converter):
     async def convert(self, ctx, member_str):
         """Converts input string to discord.Member object"""
 
+        # mention check
+        if ctx.message.mentions:
+            member = ctx.message.mentions[0]
+            if member:
+                return member
+
+        # ensure members are loaded
+        if not ctx.guild.chunked:
+            await ctx.guild.chunk()
+
         # id check
         if member_str.isdigit():
             guild = ctx.guild
@@ -19,12 +29,6 @@ class MemberConverter(commands.Converter):
                 member = guild.get_member(int(member_str))
                 if member:
                     return member
-
-        # mention check
-        if ctx.message.mentions:
-            member = ctx.message.mentions[0]
-            if member:
-                return member
 
         # name+disc check
         if len(member_str) > 5 and member_str[-5] == '#':

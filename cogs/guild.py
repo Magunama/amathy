@@ -1,10 +1,30 @@
-from utils.checks import FileCheck
-from discord.ext import commands
-from discord.ext.commands.cooldowns import BucketType
 import discord
+from discord.ext import commands
+from discord.ext import menus
+from discord.ext.commands.cooldowns import BucketType
+from utils.checks import FileCheck
 from utils.embed import Embed
+from utils.funx import BaseRequest
 import random
 import json
+
+
+class RolePaginator(menus.ListPageSource):
+    def __init__(self, entries, *, per_page=10):
+        super().__init__(entries, per_page=per_page)
+
+    async def format_page(self, menu: menus.Menu, entries):
+        curr_page = menu.current_page
+        page_count = self.get_max_pages()
+        rows = list()
+        for index, role in enumerate(entries, 10 * curr_page + 1):
+            rows.append(f"`{index}`. {role.mention} • {role.id}")
+        embed = discord.Embed(title="Guild roles", description="\n".join(rows))
+        embed.set_footer(text=f"Page {curr_page + 1}/{page_count}")
+        return embed
+
+    def is_paginating(self):
+        return True
 
 
 class Server(commands.Cog):
@@ -74,25 +94,22 @@ class Server(commands.Cog):
     @server.command(name="info")
     async def s_info(self, ctx):
         """Info|Returns some server information.|"""
+        if not ctx.guild.chunked:
+            await ctx.guild.chunk()
+
         embed = Embed().make_emb(title="Guild details:", desc="")
         embed.set_author(name="{} ({})".format(ctx.guild.name, ctx.guild.id))
         embed.set_thumbnail(url=ctx.guild.icon_url)
         embed.add_field(name="Owner", value=ctx.guild.owner, inline=True)
         embed.add_field(name="Region", value=ctx.guild.region, inline=True)
         embed.add_field(name="Created at", value=str(ctx.guild.created_at).split('.', 1)[0], inline=True)
-        members = 0
-        bots = 0
-        online_members = 0
-        if not ctx.guild.chunked:
-            await self.bot.request_offline_members(ctx.guild)
-        for member in ctx.guild.members:
-            if member.bot:
-                bots += 1
-            else:
-                members += 1
-            status = str(member.status)
-            if not status == "offline":
-                online_members += 1
+
+        members = ctx.guild.member_count
+        bots = sum(m.bot for m in ctx.guild.members)
+        widget_url = f"https://discordapp.com/api/guilds/{ctx.guild.id}/widget.json"
+        widget_data = await BaseRequest().get_json(widget_url)
+        online_members = widget_data.get("presence_count", "Unavailable")
+
         embed.add_field(name="Members", value=members, inline=True)
         embed.add_field(name="Bots", value=bots, inline=True)
         embed.add_field(name="Online members", value=online_members, inline=True)
@@ -101,32 +118,31 @@ class Server(commands.Cog):
         embed.add_field(name="Nitro boost level", value=ctx.guild.premium_tier, inline=True)
         embed.add_field(name="Members boosting this guild", value=ctx.guild.premium_subscription_count, inline=True)
         g_boost_stats = "```Emoji limit: {} emojis\nBitrate limit: {} kbps\nFilesize limit: {} MB```"
-        g_boost_stats = g_boost_stats.format(ctx.guild.emoji_limit,int(ctx.guild.bitrate_limit / 1000), int(ctx.guild.filesize_limit / 1048576))
+        g_boost_stats = g_boost_stats.format(
+            ctx.guild.emoji_limit, int(ctx.guild.bitrate_limit / 1000), int(ctx.guild.filesize_limit / 1048576)
+        )
         embed.add_field(name="Guild boost stats", value=g_boost_stats, inline=True)
         emoji_list = await ctx.guild.fetch_emojis()
         random.shuffle(emoji_list)
         emoji_string = ""
-        maxlen = len(emoji_list)
-        if maxlen > 20:
-            maxlen = 20
-        for i in range(0, maxlen):
-            emoji_string += str(emoji_list[i])
-        if len(emoji_string) > 0:
+        for i in range(len(emoji_list)):
+            emoji = emoji_list[i]
+            if emoji.available:
+                emoji = str(emoji)
+                if len(emoji_string) + len(emoji) < 1024:
+                    emoji_string += emoji
+        if emoji_string:
             embed.add_field(name="Some emojis", value=emoji_string, inline=True)
         await ctx.send(embed=embed)
 
     @server.command(aliases=["roles"])
     async def roleids(self, ctx):
         """Utility|Returns a list of roles in the guild.|"""
-        # todo: paginate
-        lista = ctx.message.guild.roles
-        string = list()
-        for k in lista:
-            idu, nama = k.id, k.name
-            if nama == "@everyone":
-                nama = "everyone"
-            string.append("{} - {}".format(nama, idu))
-        await ctx.send("\n".join(string))
+        guild_roles = ctx.guild.roles
+        guild_roles.reverse()
+        source = RolePaginator(entries=guild_roles)
+        menu = menus.MenuPages(source=source, timeout=None, delete_message_after=True)
+        await menu.start(ctx)
 
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
