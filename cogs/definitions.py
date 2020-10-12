@@ -121,7 +121,7 @@ class Definitions(commands.Cog):
                     await chan.send(def_found)
 
     @commands.command(aliases=["def"])
-    async def define(self, ctx, def_name=None):
+    async def define(self, ctx, *, def_name=None):
         """Fun|Get information about a definition.|"""
         if not def_name:
             text = "You must enter the name of a definition!"
@@ -137,7 +137,7 @@ class Definitions(commands.Cog):
 
     @commands.guild_only()
     @commands.command(aliases=["dset"])
-    async def defset(self, ctx, def_string=None):
+    async def defset(self, ctx, *, def_string=None):
         """Fun|Add a local/global definition, depending on your VIP status.|"""
         # todo: limit def creation by level
         text = "Use `::` to separate the definition name from the definition body.\nExample: `a defset gn::Good night!`"
@@ -180,7 +180,7 @@ class Definitions(commands.Cog):
 
     @commands.guild_only()
     @commands.command(aliases=["ddel"])
-    async def defdel(self, ctx, def_name=None):
+    async def defdel(self, ctx, *, def_name=None):
         """Fun|Remove a definition.|"""
         if not def_name:
             text = "Enter the name of the definition you want to delete."
@@ -224,8 +224,7 @@ class Definitions(commands.Cog):
     async def deflist(self, ctx, target: MemberConverter = None):
         """Fun|Read someone's definitions.|"""
         if not target:
-            text = "**You need to give me a member.**"
-            return await ctx.send(text)
+            target = ctx.author
         embeds = await self.get_defs_by_author(target)
         if not embeds:
             return await ctx.send(f"No definitions found for user {target.name}.")
