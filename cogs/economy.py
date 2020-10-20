@@ -153,7 +153,7 @@ class Economy(commands.Cog):
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
     @commands.command()
-    async def stats(self, ctx, target: MemberConverter = None):
+    async def stats(self, ctx, *, target: MemberConverter = None):
         """Info|Shows information concerning your current stats.|"""
         if not target:
             target = ctx.message.author
@@ -395,7 +395,7 @@ class Economy(commands.Cog):
         await ctx.send(f"I've edited {target}'s bank coins to {val}.")
 
     @commands.bot_has_permissions(embed_links=True)
-    @commands.group()
+    @commands.group(aliases=["lb"])
     async def top(self, ctx):
         """Info|Shows the top 10 users in different categories.|"""
         if ctx.invoked_subcommand is None:

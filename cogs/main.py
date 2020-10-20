@@ -39,6 +39,7 @@ class Main(commands.Cog):
         """Fun|Repeats your input.|"""
         alm = discord.AllowedMentions(users=True, everyone=False, roles=False)
         await ctx.send(ret, allowed_mentions=alm)
+        await ctx.message.delete()  # prone to exceptions
 
     @commands.command()
     async def ping(self, ctx):
@@ -110,18 +111,25 @@ class Main(commands.Cog):
         embed = discord.Embed(title="About Amathy")
         embed.set_author(name=self.bot.user, icon_url=self.bot.user.avatar_url)
         embed.set_thumbnail(url=self.bot.user.avatar_url)
-        embed.add_field(name="Library", value="Discord.py", inline=True)
-        self.field = embed.add_field(name="Library version", value=discord.__version__)
-        creator_string = "```"
+
+        creator_names = list()
         for uid in self.bot.owner_ids:
             user_obj = self.bot.get_user(uid)
-            creator_string += f"\n{user_obj}"
-        creator_string += "```"
+            if not user_obj:
+                user_obj = await self.bot.fetch_user(uid)
+            creator_names.append(str(user_obj))
+        creator_string = "```" + "\n".join(creator_names) + "```"
         embed.add_field(name="Creators", value=creator_string, inline=False)
-        embed.add_field(name="Guild count", value=str(len(self.bot.guilds)), inline=True)
+        embed.add_field(name="Library", value=f"Discord.py {discord.__version__}", inline=True)
+
         timediff = int(time.time() - self.bot.funx.launch_time)
         uptime_str = self.bot.funx.seconds2string(timediff, "en")
         embed.add_field(name="Uptime", value=uptime_str, inline=True)
+        embed.add_field(name="Guild count", value=str(len(self.bot.guilds)), inline=True)
+
+        all_members = sum(g.member_count for g in self.bot.guilds)
+        unique_members = len(self.bot.users)
+        embed.add_field(name="Member count", value=f"{all_members} (all)\n{unique_members} (cached)", inline=True)
 
         if hasattr(self.bot, "wavelink"):
             active_players = 0
@@ -140,7 +148,7 @@ class Main(commands.Cog):
             music_stats = f"""
                 ```Active players: {active_players}\nPaused players: {paused_players}\nWaiting players: {waiting_players}```
             """
-            embed.add_field(name="Music stats", value=music_stats, inline=False)
+            embed.add_field(name="Music stats", value=music_stats, inline=True)
         else:
             embed.add_field(name="Music stats", value="Unavailable", inline=True)
 
@@ -149,7 +157,7 @@ class Main(commands.Cog):
         vote = "https://discordbots.org/bot/410488336344547338/vote"
         invite = self.bot.invite_link
         links = f"\n[Website!]({website}) ✤ [Support server!]({supp_server}) ✤ [Vote for me & get rewards!]({vote}) ✤ [Invite me!]({invite})\n"
-        embed.add_field(name="Links", value=links, inline=True)
+        embed.add_field(name="Links", value=links, inline=False)
         embed.set_footer(text="© 2018-2020 - Copyright: AnimeVibe - Project Amathy")
         await ctx.send(embed=embed)
 
@@ -167,7 +175,7 @@ class Main(commands.Cog):
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
     @commands.command(aliases=["av"])
-    async def avatar(self, ctx, target: MemberConverter = None):
+    async def avatar(self, ctx, *, target: MemberConverter = None):
         """Info|Returns a user's avatar.|"""
         if not target:
             target = ctx.author

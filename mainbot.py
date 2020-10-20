@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from utils.converters import MemberNotFound
 import os
 import json
 import sys
@@ -89,8 +88,8 @@ async def on_command_error(ctx, error):
         await ctx.send(f"Sorry, it seems I'm missing the following permissions for this command:\n`{missing}`.")
 
     # checking for errors from converters
-    elif isinstance(error, MemberNotFound):
-        await ctx.send(error.message)
+    elif isinstance(error, commands.MemberNotFound):
+        await ctx.send(f"Member `{error.argument}` not found in current guild!")
 
     # checking for nsfw marked channel
     elif isinstance(error, commands.NSFWChannelRequired):
