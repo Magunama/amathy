@@ -221,7 +221,7 @@ class Definitions(commands.Cog):
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True, add_reactions=True)
     @commands.command(aliases=["dlist"])
-    async def deflist(self, ctx, target: MemberConverter = None):
+    async def deflist(self, ctx, *, target: MemberConverter = None):
         """Fun|Read someone's definitions.|"""
         if not target:
             target = ctx.author

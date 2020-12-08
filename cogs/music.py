@@ -62,6 +62,7 @@ class Player(wavelink.Player):
         self.skip_votes = set()
         self.shuffle_votes = set()
         self.stop_votes = set()
+        self.remove_votes = set()
 
     async def do_next(self) -> None:
         if self.is_playing or self.waiting:
@@ -222,6 +223,8 @@ class InteractiveController(menus.Menu):
         return payload.emoji in self.buttons
 
     async def send_initial_message(self, ctx: commands.Context, channel: discord.TextChannel) -> discord.Message:
+        # if self.embed is None:
+        #     return None
         return await channel.send(embed=self.embed)
 
     @menus.button(emoji='\u25B6')
@@ -388,7 +391,11 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
             return
 
         if isinstance(error, NoChannelProvided):
-            return await ctx.send('You must be in a voice channel or provide one to connect to.')
+            await ctx.send("You must be in a voice channel or provide one to connect to.")
+            return
+
+        if isinstance(error, wavelink.errors.ZeroConnectedNodes):
+            await ctx.send("It seems that I don't have any connected nodes to play from! Try again or contact support?")
 
     async def cog_check(self, ctx: commands.Context):
         """Cog wide check, which disallows commands in DMs."""
@@ -433,10 +440,11 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         """Method which returns required votes based on amount of members in a channel."""
         player: Player = self.bot.wavelink.get_player(guild_id=ctx.guild.id, cls=Player, context=ctx)
         channel = self.bot.get_channel(int(player.channel_id))
+        if not channel:
+            return 1
         required = math.ceil((len(channel.members) - 1) / 2.5)
-
         if ctx.command.name == 'stop':
-            if len(channel.members) - 1 == 2:
+            if len(channel.members) == 3:
                 required = 2
 
         return required
@@ -720,8 +728,6 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
     @commands.command(aliases=['q'])
     async def queue(self, ctx, page: int = 1):
         """Music|Shows the player's queue.|"""
-        # todo: add duration to tracks
-
         player: Player = self.bot.wavelink.get_player(guild_id=ctx.guild.id, cls=Player, context=ctx)
         if player.queue.empty():
             return await ctx.send('🎧 **There\'s nothing in the queue! Why not queue something?** 🎧')
@@ -743,13 +749,13 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
                 link = track.url
                 emoji = "<:spotify:757887449098879006>"
             else:
-                print(track.identifier)
                 link = track.uri
                 emoji = "<:youtube:757887446271918090>"
                 if URL_REG.search(str(track.identifier)):
                     emoji = ":grey_question:"
+            track_len = ", `[{}]`".format(self.bot.funx.seconds2string(track.length / 1000))
 
-            embed_desc += f'`{index + 1}.` {emoji} [**{track.title}**]({link}) requested by **{requester}**\n'
+            embed_desc += f"`{index + 1}.` {emoji} [**{track.title}**]({link}) requested by **{requester}**{track_len}\n"
 
         embed = discord.Embed(colour=discord.Color.purple(), title=f"Queue | **{queue_len} tracks**",
                               description=f"\n\n{embed_desc}")
@@ -762,6 +768,10 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         player: Player = self.bot.wavelink.get_player(guild_id=ctx.guild.id, cls=Player, context=ctx)
 
         if not player.is_connected:
+            return
+
+        if not player.current:
+            await ctx.send("Nothing playing!")
             return
 
         await player.invoke_controller()
@@ -804,7 +814,7 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
         query = 'ytsearch:' + query
         tracks = await self.bot.wavelink.get_tracks(query)
         if not tracks:
-            return await ctx.send('No songs were found with that query. Please try again.', delete_after=8)
+            return await ctx.send("No songs were found with that query. Please try again.", delete_after=8)
 
         tracks = tracks[:10]
         page = ""
@@ -837,7 +847,46 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
                 track = Track(track.id, track.info, requester=ctx.author)
                 await player.queue.put(track)
                 await player.do_next()
-                await ctx.send(f'```ini\nAdded {track.title} to the queue\n```', delete_after=8)
+                await ctx.send(f"```ini\nAdded {track.title} to the queue\n```")
+
+    @commands.command()
+    async def remove(self, ctx, index: int):
+        """Music|Removes a track from the queue by given index.|"""
+        player: Player = self.bot.wavelink.get_player(guild_id=ctx.guild.id, cls=Player, context=ctx)
+
+        queue_list = player.queue.list()
+        queue_len = len(queue_list)
+        if queue_len == 0:
+            return await ctx.send("Nothing queued.")
+        if index > queue_len or index < 1:
+            return await ctx.send(f"Track index has to be **between** 1 and {queue_len}!")
+        to_remove = queue_list[index - 1]
+
+        async def remove_track():
+            player.remove_votes.clear()
+            # a bit nasty, but still better than marking tracks as obsolete
+            new_queue = QueueExtension()
+            for idx, track in enumerate(queue_list, 1):
+                if not idx == index:
+                    await new_queue.put(track)
+            player.queue = new_queue
+
+        if to_remove.requester == ctx.author:
+            await remove_track()
+            await ctx.send(f"The song requester has removed **{to_remove.title}** from the queue.")
+            return
+        if await self.is_privileged(ctx):
+            await remove_track()
+            await ctx.send(f"A privileged user has removed **{to_remove.title}** from the queue.")
+            return
+
+        required = self.required_votes(ctx)
+        player.remove_votes.add(ctx.author)
+        if len(player.remove_votes) >= required:
+            await remove_track()
+            await ctx.send(f"Vote to remove **{to_remove.title}** passed. Removing song from the queue.")
+        else:
+            await ctx.send(f"{ctx.author.mention} has voted to remove **{to_remove.title}**", delete_after=8)
 
 
 def setup(bot: commands.Bot):
