@@ -16,6 +16,9 @@ class WebHook(commands.Cog):
         pic = str(guild.icon_url)
         invite = self.bot.invite_link
         desc = f"To invite me to a guild, click [here]({invite})."
+        guild_owner = guild.owner
+        if not guild_owner:
+            guild_owner = commands.MemberConverter().query_member_by_id(self.bot, guild, guild.owner_id)
         return {
             "embeds": [
                 {
@@ -32,7 +35,7 @@ class WebHook(commands.Cog):
                         },
                         {
                             "name": "Owner",
-                            "value": str(guild.owner),
+                            "value": str(guild_owner),
                             "inline": True
                         },
                         {
@@ -42,7 +45,7 @@ class WebHook(commands.Cog):
                         }
                     ],
                     "footer": {
-                        "text": "If you can't donate, at least spread the word about us!"
+                        "text": "If you enjoy our projects, spread the word about us!"
                     }
                 }
             ]

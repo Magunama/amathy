@@ -1,6 +1,6 @@
 from discord.ext import tasks, commands
 import aiohttp
-from discord import Game
+from discord import Activity, ActivityType
 import random
 import datetime
 import asyncio
@@ -29,14 +29,14 @@ class Tasks(commands.Cog):
     def get_vip_interval(self):
         time_utc = datetime.datetime.utcnow()
         time_now = time_utc + datetime.timedelta(hours=self.utc_diff)
-        time_next = time_now + datetime.timedelta(days=1) #interval
+        time_next = time_now + datetime.timedelta(days=1)  # interval
         time_next = time_next.replace(hour=0, minute=0, second=0)
         return time_next - time_now
 
     @tasks.loop(hours=24)
     async def vip_days(self):
         """Vip_days must go down, right?"""
-        script = "update amathy.stats set vip_days=stats.vip_days-1 where vip_days > 0"
+        script = "update amathy.stats set vip_days=stats.vip_days - 1 where vip_days > 0"
         await self.bot.funx.execute(script)
         print("[INFO][Task] VIP days just went down!")
 
@@ -58,21 +58,19 @@ class Tasks(commands.Cog):
 
     @tasks.loop(minutes=5)
     async def bot_activity(self):
-        # todo dynamic approach
         """Changes bot's activity."""
-        games = [
-            "ama help", "getting votes on Top.gg", "https://amathy.moe", "with Magu and Hrozvitnir", "quality music",
-            "ama vote", "Pokemon GO with Andrew", "with daily coins"
-        ]
-        old_game = self.bot.guilds[0].get_member(self.bot.user.id).activity
-        old_game_name = ""
-        if old_game:
-            old_game_name = old_game.name
-        new_game_name = random.choice(games)
-        while new_game_name == old_game_name:
-            new_game_name = random.choice(games)
-        game = Game(name=new_game_name)
-        await self.bot.change_presence(activity=game)
+        activities = (
+            (("quality music", "with Magu and Hrozvitnir"), ActivityType.playing),
+            (("ama help", "ama vote", "ama daily"), ActivityType.listening),
+            (("Pokemon Go with Andrew", "the best bot contest"), ActivityType.competing),
+            (("votes on Top.gg", "https://amathy.moe"), ActivityType.watching)
+        )
+
+        new_activity_category = random.choice(activities)
+        new_activity = random.choice(new_activity_category[0])
+        new_activity_type = new_activity_category[1]
+
+        await self.bot.change_presence(activity=Activity(type=new_activity_type, name=new_activity))
 
     @bot_activity.before_loop
     async def before_bot_activity(self):
@@ -123,7 +121,7 @@ class Tasks(commands.Cog):
 
     @reward_votes.before_loop
     async def before_reward_votes(self):
-        print('[INFO][Task] Vote reward task is active...')
+        print("[INFO][Task] Vote reward task is now active!")
         await self.bot.wait_until_ready()
 
     @tasks.loop(minutes=25)
@@ -150,8 +148,8 @@ class Tasks(commands.Cog):
 
     @post_gcount.before_loop
     async def before_post_gcount(self):
-        print('[INFO][Task] Waiting to send guildcount to DBL...')
-        await self.bot.wait_until_ready()
+        print("[INFO][Task] Waiting to send guildcount to Top.gg...")
+        await asyncio.sleep(300)
 
 
 def setup(bot):
