@@ -12,13 +12,13 @@ class WebHook(commands.Cog):
         async with aiohttp.ClientSession() as session:
             await session.post(url, json=obj)
 
-    def make_guild_payload(self, guild, title):
+    async def make_guild_payload(self, guild, title):
         pic = str(guild.icon_url)
         invite = self.bot.invite_link
         desc = f"To invite me to a guild, click [here]({invite})."
         guild_owner = guild.owner
         if not guild_owner:
-            guild_owner = commands.MemberConverter().query_member_by_id(self.bot, guild, guild.owner_id)
+            guild_owner = await commands.MemberConverter().query_member_by_id(self.bot, guild, guild.owner_id)
         return {
             "embeds": [
                 {
@@ -53,12 +53,12 @@ class WebHook(commands.Cog):
 
     async def send_on_guild_join(self, guild):
         title = "Just joined a new guild! [#{}]".format(len(self.bot.guilds))
-        obj = self.make_guild_payload(guild, title)
+        obj = await self.make_guild_payload(guild, title)
         await self.send(self.main_webhook, obj)
 
     async def send_on_guild_remove(self, guild):
         title = "Just left a guild! [#{}]".format(len(self.bot.guilds))
-        obj = self.make_guild_payload(guild, title)
+        obj = await self.make_guild_payload(guild, title)
         await self.send(self.main_webhook, obj)
 
     async def send_on_vote_received(self, u_name, multi):

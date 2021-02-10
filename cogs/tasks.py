@@ -18,6 +18,7 @@ class Tasks(commands.Cog):
         self.bot_activity.start()
         self.vip_days.start()
         self.refill_bet.start()
+        self.reset_votes.start()
 
     def cog_unload(self):
         self.post_gcount.cancel()
@@ -25,6 +26,7 @@ class Tasks(commands.Cog):
         self.bot_activity.cancel()
         self.vip_days.cancel()
         self.refill_bet.cancel()
+        self.reset_votes.cancel()
 
     def get_vip_interval(self):
         time_utc = datetime.datetime.utcnow()
@@ -42,7 +44,6 @@ class Tasks(commands.Cog):
 
     @vip_days.before_loop
     async def before_vip_days(self):
-        await self.bot.wait_until_ready()
         interval = self.get_vip_interval()
         await asyncio.sleep(interval.total_seconds())
 
@@ -51,10 +52,6 @@ class Tasks(commands.Cog):
         """Refill bets for gamblers."""
         script = "update amathy.timers set bet_left = timers.bet_left + 1 where bet_left < 20"
         await self.bot.funx.execute(script)
-
-    @refill_bet.before_loop
-    async def before_refill_bet(self):
-        await self.bot.wait_until_ready()
 
     @tasks.loop(minutes=5)
     async def bot_activity(self):
@@ -150,6 +147,15 @@ class Tasks(commands.Cog):
     async def before_post_gcount(self):
         print("[INFO][Task] Waiting to send guildcount to Top.gg...")
         await asyncio.sleep(300)
+
+    @tasks.loop(hours=24)
+    async def reset_votes(self):
+        """Reset monthly votes."""
+        today = datetime.datetime.today().date()
+        first_day = today.replace(day=1)
+        script = f"update amathy.votes set monthly_votes = 0 where last_vote < '{first_day}';"
+        await self.bot.funx.execute(script)
+        print("[INFO][Task] Any votes from last month were just removed!")
 
 
 def setup(bot):
