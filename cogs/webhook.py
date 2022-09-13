@@ -13,7 +13,7 @@ class WebHook(commands.Cog):
             await session.post(url, json=obj)
 
     async def make_guild_payload(self, guild, title):
-        pic = str(guild.icon_url)
+        pic = str(guild.icon.url)
         invite = self.bot.invite_link
         desc = f"To invite me to a guild, click [here]({invite})."
         guild_owner = guild.owner
@@ -87,5 +87,5 @@ class WebHook(commands.Cog):
         await self.send(self.main_webhook, obj)
 
 
-def setup(bot):
-    bot.add_cog(WebHook(bot))
+async def setup(bot):
+    await bot.add_cog(WebHook(bot))

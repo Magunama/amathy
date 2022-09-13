@@ -1,7 +1,53 @@
+from asyncio import TimeoutError
+
+import discord
+from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands.cooldowns import BucketType
+from pony import orm
+from pony.orm import db_session, select
+
 from utils.converters import MemberConverter
-from asyncio import TimeoutError
+from utils.embed import Embed
+from utils.models import Report, ReportStatus
+from utils.paginators import Paginator
+
+
+class Feedback(discord.ui.Modal, title='Feedback ticket'):
+    # short input, required
+    subject = discord.ui.TextInput(
+        label='Title',
+        placeholder='Short description of issue.',
+        max_length=50
+    )
+
+    # longer input, not required
+    feedback = discord.ui.TextInput(
+        label='Description',
+        style=discord.TextStyle.long,
+        placeholder='Long description of issue.',
+        required=False,
+        max_length=500,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        with db_session:
+            report = Report(title=self.subject.value, description=self.feedback.value, author=interaction.user.id)
+        await interaction.response.send_message(
+            f'Thank you! Your feedback has been recorded. You can check the status via /report view {report.id}.',
+            ephemeral=True
+        )
+
+        # todo: avoid hardcoding id
+        creator = interaction.client.get_user(254207115399397376)
+        await creator.send(f"New report #{report.id} from {interaction.user}.")
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        await interaction.response.send_message('Oops! Something went wrong.', ephemeral=True)
+
+        # Make sure we know what the error actually is
+        # print(error)
+        # traceback.print_tb(error.__traceback__)
 
 
 class Moderation(commands.Cog):
@@ -118,6 +164,83 @@ class Moderation(commands.Cog):
             text = "I banned {}."
             await ctx.send(text.format(target))
 
+    report = app_commands.Group(name="report", description="Utility|Create or view reports (tickets).|")
 
-def setup(bot):
-    bot.add_cog(Moderation(bot))
+    @report.command()
+    async def add(self, interaction: discord.Interaction):
+        """Utility|Submit feedback via a report (ticket). Details are recorded and sent to Amathy's devs.|"""
+        await interaction.response.send_modal(Feedback())
+
+    @report.command()
+    @app_commands.describe(report_id="Report ID received on report creation.")
+    async def view(self, interaction: discord.Interaction, report_id: int):
+        """Utility|View report status and details.|"""
+        with db_session:
+            report = Report.get(id=int(report_id))
+
+        if report is None:
+            await interaction.response.send_message(f"No report found for ID {report_id}", ephemeral=True)
+            return
+
+        fields = [
+            ("Author", self.bot.get_user(report.author) or f"User<{report_id}>"),
+            ("Status", ReportStatus(report.status).name),
+            ("Created at", report.created),
+            ("Updated at", report.updated),
+        ]
+        em = Embed().make_emb(title=f"Report #{report_id} | {report.title}", desc=report.description, fields=fields)
+        await interaction.response.send_message(embed=em)
+
+    @report.command()
+    async def list(self, interaction: discord.Interaction):
+        """Utility|View opened report tickets.|"""
+
+        embeds = []
+        with db_session:
+            reports = select(r for r in Report if orm.raw_sql("r.status = 0"))
+
+            for report in reports:
+                fields = [
+                    ("Author", self.bot.get_user(report.author) or f"User<{report.id}>"),
+                    ("Status", ReportStatus(report.status).name),
+                    ("Created at", report.created),
+                    ("Updated at", report.updated),
+                ]
+                em = Embed().make_emb(title=f"Report #{report.id} | {report.title}", desc=report.description,
+                                      fields=fields)
+                embeds.append(em)
+
+        if not embeds:
+            await interaction.response.send_message(f"No reports found.", ephemeral=True)
+            return
+
+        await interaction.response.send_message(embed=embeds[0],
+                                                view=Paginator(lambda page: [embeds[page - 1]], len(embeds)))
+
+    @report.command()
+    async def set(self, interaction: discord.Interaction, report_id: int, status: ReportStatus):
+        """Utility|Change a report's status.|Creator perms."""
+        perm_chk = await self.bot.is_owner(interaction.user)
+        if not perm_chk:
+            await interaction.response.send_message("Access denied!")
+            return
+
+        with db_session:
+            report = Report.get(id=int(report_id))
+
+            if report is None:
+                await interaction.response.send_message(f"No report found for ID {report_id}", ephemeral=True)
+                return
+
+            report.status = status.value
+
+        text = f"Report status updated to {status.name} for report ID {report.id}."
+        user: discord.User = self.bot.get_user(report.author)
+        if user is not None:
+            await user.send(text)
+
+        await interaction.response.send_message(text, ephemeral=True)
+
+
+async def setup(bot):
+    await bot.add_cog(Moderation(bot))

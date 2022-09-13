@@ -1,8 +1,10 @@
 asyncio
 asyncpg
-discord.py[voice]
+discord.py[voice, speed]
 psutil
 Wavelink
 Pillow
 spotipy
-git+https://github.com/Rapptz/discord-ext-menus
+dblpy
+psycopg2
+pony

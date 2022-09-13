@@ -1,9 +1,10 @@
-from discord.ext import tasks, commands
+import asyncio
+import datetime
+import random
+
 import aiohttp
 from discord import Activity, ActivityType
-import random
-import datetime
-import asyncio
+from discord.ext import tasks, commands
 
 
 class Tasks(commands.Cog):
@@ -58,9 +59,10 @@ class Tasks(commands.Cog):
         """Changes bot's activity."""
         activities = (
             (("quality music", "with Magu and Hrozvitnir"), ActivityType.playing),
-            (("ama help", "ama vote", "ama daily"), ActivityType.listening),
+            (("/help", "/bot vote", "/daily"), ActivityType.listening),
             (("Pokemon Go with Andrew", "the best bot contest"), ActivityType.competing),
-            (("votes on Top.gg", "https://amathy.moe"), ActivityType.watching)
+            # (("votes on Top.gg", "https://amathy.moe"), ActivityType.watching),
+            (("votes on Top.gg", "SOME COMMANDS THAT ARE CURRENTLY UNAVAILABLE"), ActivityType.watching),
         )
 
         new_activity_category = random.choice(activities)
@@ -158,5 +160,5 @@ class Tasks(commands.Cog):
         print("[INFO][Task] Any votes from last month were just removed!")
 
 
-def setup(bot):
-    bot.add_cog(Tasks(bot))
+async def setup(bot):
+    await bot.add_cog(Tasks(bot))
